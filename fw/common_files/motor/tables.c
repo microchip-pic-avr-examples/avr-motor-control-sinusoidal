@@ -1,0 +1,77 @@
+/*
+© [2025] Microchip Technology Inc. and its subsidiaries.
+ 
+    Subject to your compliance with these terms, you may use Microchip 
+    software and any derivatives exclusively with Microchip products. 
+    You are responsible for complying with 3rd party license terms  
+    applicable to your use of 3rd party software (including open source  
+    software) that may accompany Microchip software. SOFTWARE IS ?AS IS.? 
+    NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, APPLY TO THIS 
+    SOFTWARE, INCLUDING ANY IMPLIED WARRANTIES OF NON-INFRINGEMENT,  
+    MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT 
+    WILL MICROCHIP BE LIABLE FOR ANY INDIRECT, SPECIAL, PUNITIVE, 
+    INCIDENTAL OR CONSEQUENTIAL LOSS, DAMAGE, COST OR EXPENSE OF ANY 
+    KIND WHATSOEVER RELATED TO THE SOFTWARE, HOWEVER CAUSED, EVEN IF 
+    MICROCHIP HAS BEEN ADVISED OF THE POSSIBILITY OR THE DAMAGES ARE 
+    FORESEEABLE. TO THE FULLEST EXTENT ALLOWED BY LAW, MICROCHIP?S 
+    TOTAL LIABILITY ON ALL CLAIMS RELATED TO THE SOFTWARE WILL NOT 
+    EXCEED AMOUNT OF FEES, IF ANY, YOU PAID DIRECTLY TO MICROCHIP FOR 
+    THIS SOFTWARE.
+*/
+
+#include "tables.h"
+#include "conversion_macros.h"
+
+const uint16_t saddle_lookup_table[] = 
+{
+    16384, 17075, 17757, 18427, 19087, 19735, 20371, 20994,
+    21605, 22204, 22788, 23359, 23916, 24459, 24986, 25499,
+    25997, 26478, 26944, 27394, 27827, 28243, 28642, 29024,
+    29389, 29736, 30064, 30375, 30668, 30942, 31197, 31434,
+    31651, 31850, 32029, 32190, 32330, 32452, 32553, 32635,
+    32698, 32741, 32764, 32767, 32750, 32714, 32658, 32583,
+    32488, 32373, 32239, 32085, 31912, 31720, 31508, 31278,
+    31029, 30761, 30475, 30170, 29847, 29506, 29148, 28771,
+    28378, 28771, 29148, 29506, 29847, 30170, 30475, 30761,
+    31029, 31278, 31508, 31720, 31912, 32085, 32239, 32373,
+    32488, 32583, 32658, 32714, 32750, 32767, 32764, 32741,
+    32698, 32635, 32553, 32452, 32330, 32190, 32029, 31850,
+    31651, 31434, 31197, 30942, 30668, 30375, 30064, 29736,
+    29389, 29024, 28642, 28243, 27827, 27394, 26944, 26478,
+    25997, 25499, 24986, 24459, 23916, 23359, 22788, 22204,
+    21605, 20994, 20371, 19735, 19087, 18427, 17757, 17075,
+    16384, 15683, 14972, 14252, 13524, 12787, 12043, 11291,
+    10533, 9768, 8998, 8222, 7441, 6655, 5866, 5073,
+    4277, 3479, 2678, 1876, 1072, 268, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 268, 1072, 1876, 2678, 3479,
+    4277, 5073, 5866, 6655, 7441, 8222, 8998, 9768,
+    10533, 11291, 12043, 12787, 13524, 14252, 14972, 15683
+};
+
+/* CW */
+const uint8_t hall_to_pos_table_cw[] = {0, 2, 4, 3, 6, 1, 5, 0};
+
+/* CCW */
+const uint8_t hall_to_pos_table_ccw[] =  {0, 4, 2, 3, 6, 5, 1, 0};
+
+const uint16_t pos_to_angle_table[] = 
+{
+    0, 
+    CONVERT_DEGREES_TO_U16(60.0), 
+    CONVERT_DEGREES_TO_U16(120.0), 
+    CONVERT_DEGREES_TO_U16(180.0), 
+    CONVERT_DEGREES_TO_U16(240.0), 
+    CONVERT_DEGREES_TO_U16(300.0), 
+    CONVERT_DEGREES_TO_U16(359.99), 
+    0
+};
