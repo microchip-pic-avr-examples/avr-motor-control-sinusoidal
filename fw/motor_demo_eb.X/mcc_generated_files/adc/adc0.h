@@ -44,6 +44,12 @@
  * @ingroup adc0
  * @brief Defines the Custom Name pin mapping for channels in @ref adc_channel_t
  */
+#define CRT_P2 ADC0_CHANNEL_AIN31
+
+/**
+ * @ingroup adc0
+ * @brief Defines the Custom Name pin mapping for channels in @ref adc_channel_t
+ */
 #define POT ADC0_CHANNEL_AIN1
 
 /**
@@ -51,24 +57,6 @@
  * @brief Defines the Custom Name pin mapping for channels in @ref adc_channel_t
  */
 #define CRT_P ADC0_CHANNEL_AIN3
-
-/**
- * @ingroup adc0
- * @brief Defines the Custom Name pin mapping for channels in @ref adc_channel_t
- */
-#define BEMF_A ADC0_CHANNEL_AIN4
-
-/**
- * @ingroup adc0
- * @brief Defines the Custom Name pin mapping for channels in @ref adc_channel_t
- */
-#define BEMF_B ADC0_CHANNEL_AIN5
-
-/**
- * @ingroup adc0
- * @brief Defines the Custom Name pin mapping for channels in @ref adc_channel_t
- */
-#define BEMF_C ADC0_CHANNEL_AIN6
 
 /**
  * @ingroup adc0

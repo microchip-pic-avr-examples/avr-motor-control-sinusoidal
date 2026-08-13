@@ -18,9 +18,9 @@ extern fixp16_t   fmul_16x16(fixp16_t a, fixp16_t b);
 
 extern void       fmul_16x16k_n3(fixp16_t *p, fixp16_t k);
 /*  C equivalent:
-void fmul_16x16k_n4(fixp16_t *p, fixp16_t k)
+void fmul_16x16k_n3(fixp16_t *p, fixp16_t k)
 {
-    uint8_t len = 4;
+    uint8_t len = 3;
     while(len--)
     {
         *p = c_fmul_16x16(*p, k);

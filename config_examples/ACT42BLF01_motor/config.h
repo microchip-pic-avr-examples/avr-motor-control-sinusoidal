@@ -22,9 +22,6 @@
 #ifndef CONFIG_H
 #define	CONFIG_H
 
-/* Analog module settings */
-#define ADC_IIR_FILTER                  true         /* Smoothing filter on ADC functions: POT, VBUS, current */
-
 /* PWM-In settings */
 #define PWM_IN_PERIOD                   (20.0)       /* ms */
 #define PWM_IN_MAX_DCY                  ( 2.0)       /* ms */
@@ -32,7 +29,7 @@
 
 /* Board specific settings - MPPB */
 #define CURRENT_SHUNT_RESISTANCE        (0.01)       /* Resistance in ohm of the current shunt */
-#define CURRENT_AMPLIFIER_GAIN          (7.5)
+#define CURRENT_AMPLIFIER_GAIN          (15.0)
 #define VBUS_DIVIDER                    (16.0)
 #define ANALOG_REFERENCE                (3300.0)     /* mV */
 #define ADC_VBUS_TRIP                   (51000.0)    /* mV - VBUS trip level */
@@ -43,28 +40,33 @@
 
 /* Motor-specific settings */
 /* ACT42BLF01:  supply 24V, 3A limit */
+#define MOTOR_PHASE_ADVANCE             (10.0)       /* Phase advance 0.0 ... 30.0 electrical degrees */
 #define MOTOR_STARTUP_CURRENT           (2500.0)     /* mA - Initial alignment current pulse may be higher than overcurrent protection */
-#define MOTOR_RPP                       (2.5)        /* ohms - Motor resistance measured phase-to-phase */
+#define MOTOR_RPP                       (2.5)        /* ohm - Motor resistance measured phase-to-phase */
+#define MOTOR_LPP                       (1.0)        /* mH - Motor inductance measured phase-to-phase */
 #define MOTOR_ALIGNMENT_DURATION        (50)         /* ms */
-#define MOTOR_STARTUP_TIME              (1000)       /* ms -  Delay until commands (POT or PWM-in) are accepted; '-1' makes commands to be ignored */
-#define MOTOR_STARTUP_SPEED             (4000.0)     /* e-RPM - Specify the initial speed - minimum value is 120 e-RPM*/
-#define HALL_ENABLED                    true         /* Setting to 'true' enables the Hall synchronization, while setting to 'false' enables the BEMF synchronization */
-#define HALL_MISALIGNMENT_CW            (10.0)       /* Hall misalignment 0.0 ... 30.0 electrical degrees */
-#define HALL_MISALIGNMENT_CCW           (14.0)       /* Hall misalignment 0.0 ... 30.0 electrical degrees */
-#define HALL_INVERTED                   false        /* Sets the Hall pins polarity - 'true' for sensors active in '0' and 'false' for sensors active in '1' */ 
+#define MOTOR_AMPRAMP_STEP_INTERVAL     (5)          /* Amplitude ramp step interval: expressed in milliseconds, representing the time passed between two amplitude steps - 1 for aggresive ramp, 10 for soft ramp */   
+#define MOTOR_STARTUP_TIME              (100)        /* ms - Delay until commands (POT or PWM-in) are accepted; a value of '-1' causes commands to be ignored */
+#define MOTOR_RAMP_START_SPEED          (1000.0)     /* e-RPM - Specifies the initial speed - minimum value is 100 e-RPM*/
+#define MOTOR_RAMP_END_SPEED            (4000.0)     /* e-RPM */
+#define MOTOR_RAMP_STEP_SPEED           (5)          /* e-RPM */
+#define HALL_ENABLED                    false        /* Setting to 'true' enables the Hall synchronization, while setting to 'false' enables the BEMF synchronization */
+#define HALL_MISALIGNMENT_CW            (4.0)        /* Hall misalignment 0.0 ... 90.0 electrical degrees */
+#define HALL_MISALIGNMENT_CCW           (0.0)        /* Hall misalignment 0.0 ... 90.0 electrical degrees */
 
 /* Speed regulation specific settings */
-#define REGULATOR_SPEED_EN              true         /* Setting to 'true' enables speed control in Closed Loop, setting to 'false' enables amplitude control in Open Loop */
-#define REGULATOR_MAX_SPEED             (12000.0)    /* e-RPM target speed for 100% command */
-#define REGULATOR_MIN_SPEED             (4000.0)     /* e-RPM target speed for   0% command */
+#define REGULATOR_SPEED_EN              true         /* Setting to 'true' enables speed control in Closed Loop, while setting to 'false' enables amplitude control in Open Loop */
+#define REGULATOR_MAX_SPEED             (10000.0)    /* e-RPM target speed for 100% command */
+#define REGULATOR_MIN_SPEED             (5000.0)     /* e-RPM target speed for   0% command */
 #define REGULATOR_PI_KI                 (2.0)        /* PI speed control loop integral coefficient, minimum 1.0 */
 #define REGULATOR_PI_KP                 (4.0)        /* PI speed control loop proportional coefficient, minimum 1.0 */
+#define REGULATOR_PI_DT                 (10)         /* PI time step size [ms] - minimum 10 ms */
 
 /* Drive Algorithm settings */
 #define DRIVE_FORCED                    false        /* Setting to 'true' runs the motor without BEMF sensing, only blind drive and no rotor synchronization, which could overheat the motor */
-#define STALL_DETECTION_THRESHOLD       (10)         /* Stall detection tolerance: higher number - more tolerant to perturbances, but slower detection */
+#define STALL_DETECTION_THRESHOLD       (10)         /* Stall detection tolerance: a higher number leads to more tolerance to perturbances, but slower detection */
 #define STALL_DETECTION_ENABLED         true         /* Setting to 'false' disables the stall detection mechanism */
-#define STALL_MAXIMUM_ERPM              (50000.0)    /* e-RPM - Threshold when the algorithm might lose synchronization */
+#define STALL_MAXIMUM_ERPM              (30000.0)    /* e-RPM - Threshold when the algorithm might lose synchronization */
 
 
 #endif	/* CONFIG_H */

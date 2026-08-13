@@ -49,7 +49,8 @@ static void Periodic_MainHandler1(void)
     uint16_t amp   = Motor_AmplitudeGet();
     uint8_t  pot   = ADC_TO_PERCENT(Analog_Get(ID_POT)) + 0.5;
     uint32_t vbus  = ADC_TO_VOLTAGE(Analog_Get(ID_VBUS));
-    int16_t  crt   = ADC_TO_CURRENT(Analog_Get(ID_CRT), Analog_Get(ID_REF));
+    analog_bus_crt_t current = Analog_BusCurrentGet();
+    int16_t  crt   = (int16_t)(CURRENT_CONSTANT * ADC_TO_CURRENT(current.result, current.samples));
     int16_t  ibus  = (int16_t)((int32_t)crt * (uint32_t)amp / (uint32_t)Motor_MaxAmpGet());
     char *mstate   = (motor_state == MOTOR_RUNNING)? "run":"off";
     PrintEndl(); printf("PwmIn:%03u%% Pot:%03u%% Ampl:%05u e-rpm:%06u Vbus:%06lumV Ibus:%05dmA Imotor:%05dmA Motor:%s", ipwm, pot, amp, erpm, vbus, ibus, crt, mstate);
@@ -105,6 +106,7 @@ void app(void)
 {
     const char *buildString    = "\n\rThis build was compiled at " __DATE__ ", " __TIME__;
     const char *platformString = "\n\rMCU Configuration: " __CPU_STRING__;
+    const char *controlMode    = (HALL_ENABLED ? "Control Mode: Sensored HALL" : "Control Mode: Sensorless BEMF"); 
 
     swtimer_data_t tm1, tm2, ti;
     PWM_TIMER_SYNC();
@@ -121,10 +123,11 @@ void app(void)
     
     PRECISE_DELAY_MS(1000); /* delay required for analog engine to perform measurements */
     
-    Analog_EmergencyStop_Register(ID_VBUS, Motor_Fault, VOLTAGE_TO_ADC(ADC_VBUS_TRIP),                         MOTOR_FAULT_OVERVOLTAGE);
-    Analog_EmergencyStop_Register(ID_CRT,  Motor_Fault, CURRENT_TO_ADC(ADC_CURRENT_TRIP) + Analog_Get(ID_REF), MOTOR_FAULT_OVERCURRENT);
+    Analog_EmergencyStop_Register(ID_VBUS,  Motor_Fault, VOLTAGE_TO_ADC(ADC_VBUS_TRIP),                         MOTOR_FAULT_OVERVOLTAGE);
+    Analog_EmergencyStop_Register(ID_CRT_A, Motor_Fault, CURRENT_TO_ADC(ADC_CURRENT_TRIP) + Analog_Get(ID_REF), MOTOR_FAULT_OVERCURRENT);
 
     PrintEndl(); printf("%s%s", buildString, platformString);
+    PrintEndl(); printf("%s", controlMode);
     PrintEndl(); printf("Motor Demo App Started");
     PrintEndl(); printf("Short-press button to start / stop motor");
     PrintEndl(); printf("Long-press button to restart the board any time");
@@ -162,7 +165,7 @@ void app(void)
             {
                 static motor_dir_t direction = DIR_CW;
                 printf(" Motor Starting %s",(direction == DIR_CW)? "CW":"CCW");
-                Motor_Start(Analog_Get(ID_VBUS), direction);
+                Motor_Start(direction);
                 if(direction == DIR_CW) direction = DIR_CCW;
                 else                    direction = DIR_CW;
             }

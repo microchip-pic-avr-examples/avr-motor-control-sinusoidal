@@ -26,7 +26,7 @@
 
 extern const uint16_t           saddle_lookup_table[];
 extern const uint16_t           pos_to_angle_table[];
-extern const uint8_t            hall_to_pos_table_cw[];
-extern const uint8_t            hall_to_pos_table_ccw[];
+extern const uint8_t            pos_table_cw[];
+extern const uint8_t            pos_table_ccw[];
 
 #endif /* TABLES_H */

@@ -43,7 +43,6 @@ extern "C" {
 #include "../system/utils/compiler.h"
 #include "config_bits.h"
 #include "../system/pins.h"
-#include "../ac/ac0.h"
 #include "../ac/ac1.h"
 #include "../evsys/evsys.h"
 #include "../peripheral/rstctrl.h"

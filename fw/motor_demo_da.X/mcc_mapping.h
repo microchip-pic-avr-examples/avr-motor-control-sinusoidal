@@ -40,9 +40,10 @@
 #define FAULT_COMPARATOR_EDGE               true /* true - on rising edge  | false - on falling edge */
 #define CURRENT_TRIP_LEVEL_SET              AC0_DACRefValueSet
 #define AC_REF_DAC_MAX                      255
+#define ADC_MAX                             4095
 
-#define PWM_PER                             600  // 50us
-#define PWM_DT                              3    // 250ns
+#define PWM_PER                             600 // 50us
+#define PWM_DT                              3   // 250ns
 
 /* timer used to generate PWM and sample comparator */
 extern void TCA_sync_start(void);
@@ -62,6 +63,7 @@ extern void TCA_sync_start(void);
                                             TCA1.SINGLE.CTRLB |= (TCA_SINGLE_CMP0EN_bm | TCA_SINGLE_CMP1EN_bm | TCA_SINGLE_CMP2EN_bm);\
                                             TCA0.SINGLE.CTRLB |= (TCA_SINGLE_CMP0EN_bm | TCA_SINGLE_CMP1EN_bm | TCA_SINGLE_CMP2EN_bm);\
                                             }while(0)
+#define PWM_TIMER_DIR                       (TCA0.SINGLE.CTRLESET & TCA_SINGLE_DIR_bm)
 #define PWM_TIMER_CB_REGISTER               TCA0_OverflowCallbackRegister
 
 /* periodic 1ms software timer */
@@ -69,17 +71,16 @@ extern void TCA_sync_start(void);
 #define SW_TIMER_PERIOD                     (970) /* us */
 
 /* ADC pins definitions */
-#define CRT_P_ADC_PIN                       ADC_MUXPOS_AIN10_gc // PE2
+#define CRT_A_ADC_PIN                       ADC_MUXPOS_AIN10_gc // PE2
+#define CRT_B_ADC_PIN                       ADC_MUXPOS_AIN9_gc  // PE1
 #define CRT_N_ADC_PIN                       ADC_MUXPOS_AIN8_gc  // PE0
 #define VBUS_ADC_PIN                        ADC_MUXPOS_AIN0_gc  // PD0
 #define POT_ADC_PIN                         ADC_MUXPOS_AIN1_gc  // PD1
 
 /* ADC APIs */
 #define ADC_MUX_SET                         ADC0_ChannelSelect
-#define ADC_CONV_START                      ADC0_ConversionStart
 #define ADC_RESULT_GET                      ADC0_ConversionResultGet
-#define ADC_RESOLUTION_GET                  ADC0_ResolutionGet
-#define ADC_NO_CONV_PROGRESS                ADC0_IsConversionDone
+#define ADC_MUX_GET                         ADC0.MUXPOS
 
 #define System_Reset_Command                RSTCTRL_SoftwareReset
 
@@ -100,13 +101,6 @@ extern void TCA_sync_start(void);
 #define HALL_B_PIN                          PIN3CTRL
 #define HALL_C_PIN                          PIN4CTRL
 #define HALL_READ                           ((PORTF.IN & (PIN2_bm | PIN3_bm | PIN4_bm)) >> 2)                          
-#define HALL_INVERT()                       do{\
-                                            HALL_PORT.HALL_A_PIN = PORT_INVEN_bm;\
-                                            HALL_PORT.HALL_B_PIN = PORT_INVEN_bm;\
-                                            HALL_PORT.HALL_C_PIN = PORT_INVEN_bm;\
-                                            }while(0)
-
 
 
 #endif /* MCC_MAPPING_H */
-

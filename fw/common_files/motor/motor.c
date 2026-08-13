@@ -31,12 +31,21 @@
 /****************************/
 /*** internal definitions ***/
 /****************************/
-#define MAX_AMP_GET                PWM_PER
-#define MIN_AMP_GET                (0)
-#define MAX_INC                    CONVERT_DEGREES_TO_U16(45.0)   
-#define MIN_INC                    ERPM_TO_INC(100.0)  
-#define HALL_TO_POS_TABLE          ((direction == DIR_CW) ? hall_to_pos_table_cw : hall_to_pos_table_ccw)
-#define HALL_OFFSET                ((direction == DIR_CW) ? HALL_MISALIGNMENT_CW : HALL_MISALIGNMENT_CCW)
+#define MAX_AMP_GET                 PWM_PER
+#define MIN_AMP_GET                 (0)
+#define MAX_INC                     CONVERT_DEGREES_TO_U16(45.0)   
+#define MIN_INC                     ERPM_TO_INC(100.0)  
+#define SENSOR_TO_POS_TABLE         ((direction == DIR_CW) ? pos_table_cw : pos_table_ccw)
+#define HALL_OFFSET                 ((direction == DIR_CW) ? CONVERT_DEGREES_TO_U16(HALL_MISALIGNMENT_CW + 60.0) : CONVERT_DEGREES_TO_U16(HALL_MISALIGNMENT_CCW + 180.0))
+#define BEMF_OFFSET                 CONVERT_DEGREES_TO_U16(30.0)
+#define SENSOR_OFFSET               ((HALL_ENABLED) ? HALL_OFFSET : BEMF_OFFSET)
+#define RS                          (MOTOR_RPP/2.0)             // Ohm
+#define LS                          (MOTOR_LPP/2000.0)          // Henry
+#define DT                          (2.0 / SAMPLING_FREQUENCY)  // Second
+#define NSCALE                      (16777216)
+#define EMF_K1                      (int32_t)(((ANALOG_REFERENCE / 1000.0) * VBUS_DIVIDER * NSCALE) / (ADC_MAX * 3.0 * MAX_AMP_GET))
+#define EMF_K2                      (int32_t)(((ANALOG_REFERENCE / 1000.0) *   RS     * NSCALE) / (ADC_MAX * CURRENT_SHUNT_RESISTANCE * CURRENT_AMPLIFIER_GAIN))
+#define EMF_K3                      (int32_t)(((ANALOG_REFERENCE / 1000.0) *   LS     * NSCALE) / (ADC_MAX * CURRENT_SHUNT_RESISTANCE * CURRENT_AMPLIFIER_GAIN * DT))
 
 typedef enum
 {
@@ -50,13 +59,14 @@ typedef enum
 /****************************/
 
 /* status flags */
-static          bool           status_running, command_enabled, hall_enabled;
-static volatile motor_status_t status_events;
-static volatile fixp16_t       actual_amplitude, target_amplitude;
-static motor_dir_t             direction;
-static volatile split_u24_t    phase_integrator;
-static volatile triple16_t     stator_angles;
-static volatile triple16_t     drive_data;
+static          bool                status_running, command_enabled, drive_forced;
+static volatile motor_status_t      status_events;
+static volatile fixp16_t            actual_amplitude, target_amplitude;
+static motor_dir_t                  direction;
+static volatile split_u32_t         phase_integrator;
+static volatile triple16_t          stator_angles;
+static volatile triple16_t          drive_data;
+static volatile uint8_t             sensor_cnt;
 
 /****************************/
 /***** private functions ****/
@@ -64,13 +74,19 @@ static volatile triple16_t     drive_data;
 
 static void __OpenLoop_Control(void)
 {
-    if(actual_amplitude > target_amplitude)
+    static uint16_t cnt = 0;
+    cnt++;
+    if(cnt == MOTOR_AMPRAMP_STEP_INTERVAL)
     {
-        actual_amplitude --;
-    }
-    else if(actual_amplitude < target_amplitude)
-    {
-        actual_amplitude ++;
+        cnt = 0;
+        if(actual_amplitude > target_amplitude)
+        {
+            actual_amplitude --;
+        }
+        else if(actual_amplitude < target_amplitude)
+        {
+            actual_amplitude ++;
+        }
     }
 }
 
@@ -87,29 +103,28 @@ static volatile uint16_t stator_speed, target_speed;
 /* parameter: 'false' - normal run , 'true' - first run & initialization */
 static void __Speed_Control(bool state)
 {
-    static uint24_t speed_integrator = 0;
-    
+    static uint32_t speed_integrator = 0;    
     if(state == true)
     {
-        speed_integrator = ((uint24_t)actual_amplitude << 8);
+        speed_integrator = ((uint32_t)actual_amplitude << 16);
         target_speed = stator_speed;
     }
     if((REGULATOR_SPEED_EN == true) && (command_enabled))
     {
-            int24_t Ki_err, Kp_err, tmp;
+            int32_t Ki_err, Kp_err, tmp;
             int16_t err;
-            tmp = (int24_t)target_speed - (int24_t)stator_speed;
+            tmp = (int32_t)target_speed - (int32_t)stator_speed;
             err = (int16_t)SATURATE(tmp, -32000, 32000);
 
-            Ki_err = Multiply_U16xI16((uint16_t)(REGULATOR_PI_KI), err);
+            Ki_err = Multiply_U16xI16((uint16_t)(REGULATOR_PI_KI * REGULATOR_PI_DT), err);
             Kp_err = Multiply_U16xI16((uint16_t)(REGULATOR_PI_KP), err);
 
-            tmp = Ki_err + (int24_t)speed_integrator;
-            speed_integrator = (uint24_t)SATURATE(tmp, MIN_AMP_GET * 256L, MAX_AMP_GET * 256L);
+            tmp = Ki_err + (int32_t)speed_integrator;
+            speed_integrator = (uint32_t)SATURATE(tmp, MIN_AMP_GET * 65536L, MAX_AMP_GET * 65536L);
 
-            tmp = Kp_err + (int24_t)speed_integrator;
-            split_u24_t amp_acc;
-            amp_acc.W24 = (uint24_t)SATURATE(tmp, MIN_AMP_GET * 256L, MAX_AMP_GET  * 256L);
+            tmp = Kp_err + (int32_t)speed_integrator;
+            split_u32_t amp_acc;
+            amp_acc.W32 = (uint32_t)SATURATE(tmp, MIN_AMP_GET * 65536L, MAX_AMP_GET  * 65536L);
             actual_amplitude = amp_acc.H16;
     }
 }
@@ -121,8 +136,10 @@ static void __ShutOff(void)
         PWM_OFF();
         command_enabled = false;
         status_running = false;
+        drive_forced = true;
         actual_amplitude = 0;
         stator_speed = 0;
+        sensor_cnt = 0;
     }
 }
 
@@ -145,7 +162,101 @@ static inline void  __Motor_StallHandler(stall_ev_t ev)
     }
 }
 
-static inline bool __Rollover_Event(void)
+static inline uint8_t __Emf_Rebuild(void)
+{
+    static int16_t pia_adc = 0, pib_adc = 0, pic_adc = 0;
+    static split_i32_t a32, b32, c32, d32, e32, f32;
+    int16_t ia_adc = 0, ib_adc = 0, ic_adc = 0;
+    uint8_t retval = 0;
+    uint16_t vbus_adc = Analog_Get(ID_VBUS);
+    
+    bool new_sample = Analog_NewCrtSample();
+    
+    if(new_sample)
+    {
+        ia_adc = (int16_t)Analog_Get(ID_CRT_A);
+        int16_t phase_a = (int16_t)((drive_data.a.W16 << 1) - drive_data.b.W16 - drive_data.c.W16);
+        a32.W32 = phase_a * (int32_t)vbus_adc;
+        a32.W32 *= EMF_K1;
+        b32.W32 = EMF_K2 * (int32_t)ia_adc;
+        a32.W32 -= b32.W32;
+        b32.W32 = (int32_t)(ia_adc - pia_adc);
+        b32.W32 *= EMF_K3;
+        a32.W32 -= b32.W32;
+        pia_adc = ia_adc;
+    }
+    else
+    {
+        ib_adc = (int16_t)Analog_Get(ID_CRT_B);
+        int16_t phase_b = (int16_t)((drive_data.b.W16 << 1) - drive_data.a.W16 - drive_data.c.W16);
+        c32.W32 = phase_b * (int32_t)vbus_adc;
+        c32.W32 *= EMF_K1;
+        d32.W32 = EMF_K2 * (int32_t)ib_adc;
+        c32.W32 -= d32.W32;
+        d32.W32 = (int32_t)(ib_adc - pib_adc);
+        d32.W32 *= EMF_K3;
+        c32.W32 -= d32.W32;
+        pib_adc = ib_adc;
+        
+        ic_adc = (int16_t)Analog_Get(ID_CRT_C);
+        int16_t phase_c = (int16_t)((drive_data.c.W16 << 1) - drive_data.a.W16 - drive_data.b.W16);
+        e32.W32 = phase_c * (int32_t)vbus_adc;
+        e32.W32 *= EMF_K1;
+        f32.W32 = EMF_K2 * (int32_t)ic_adc;
+        e32.W32 -= f32.W32;
+        f32.W32 = (int32_t)(ic_adc - pic_adc);
+        f32.W32 *= EMF_K3;
+        e32.W32 -= f32.W32;
+        pic_adc = ic_adc;
+    }
+    if(!(a32.H8 & 0x80))  retval |= 0x1;
+    if(!(c32.H8 & 0x80))  retval |= 0x2;
+    if(!(e32.H8 & 0x80))  retval |= 0x4;
+    return retval;
+}
+
+static inline uint16_t __Rotor_Get(void)
+{
+    static uint16_t rotor_angle = 0;
+    static uint8_t prev_pos = 0;
+    static bool locked = false;
+    uint8_t actual_pos;
+    if(HALL_ENABLED) actual_pos = HALL_READ;
+    else             actual_pos = __Emf_Rebuild(); 
+    if(!locked)
+    {
+        if((actual_pos != prev_pos))
+        {
+            locked = true;
+            rotor_angle = pos_to_angle_table[SENSOR_TO_POS_TABLE[actual_pos]] + SENSOR_OFFSET;
+            sensor_cnt ++;
+        }
+        else
+            rotor_angle += stator_speed;
+    }
+    else
+    {
+        if(actual_pos == prev_pos) locked = false;
+        rotor_angle += stator_speed;
+    }
+    prev_pos = actual_pos;
+    return rotor_angle;
+}
+
+static inline void __Drive_Synchronization(void)
+{
+    uint16_t rotor_angle = __Rotor_Get();
+    int16_t deltaValue = (int16_t)((int24_t)rotor_angle + (int24_t)CONVERT_DEGREES_TO_U16(MOTOR_PHASE_ADVANCE) - (int24_t)stator_angles.a.W16);
+    split_u32_t tmp;
+    tmp.W32 = phase_integrator.W32 + (int32_t)(deltaValue << 2);
+    tmp.W32 = (uint32_t)SATURATE(tmp.W32, MIN_INC * 65536L, MAX_INC * 65536L);
+    phase_integrator.W32 = tmp.W32;
+    tmp.W32 = phase_integrator.W32 + (int32_t)(deltaValue << 4);
+    tmp.W32 = (uint32_t)SATURATE(tmp.W32, MIN_INC * 65536L, MAX_INC * 65536L);
+    stator_speed = tmp.H16;
+}
+
+static inline bool __Rollover_Event_Crt(void)
 {
     static uint8_t prev_angle = 0;
     bool state = false;
@@ -155,53 +266,57 @@ static inline bool __Rollover_Event(void)
     return state;
 }
 
+static inline bool __Rollover_Event_Stall(void)
+{
+    static uint8_t prev_angle = 0;
+    bool state = false;
+    if(stator_angles.a.H8 < prev_angle) state = true;
+    else                                state = false;
+    prev_angle = stator_angles.a.H8;
+    return state;
+}
+
+static inline void __Stall_Detection(void)
+{
+    static uint8_t stall_cnt = 0;
+    if((STALL_DETECTION_ENABLED) && (command_enabled))
+    {
+            if(__Rollover_Event_Stall())
+            {
+                if(sensor_cnt < 4)     stall_cnt ++;
+                else if(stall_cnt > 0) stall_cnt --;
+                sensor_cnt = 0;
+            }
+            if(stator_speed > ERPM_TO_INC(STALL_MAXIMUM_ERPM))
+                __Motor_StallHandler(STALL_TOO_FAST);
+            if((stall_cnt > STALL_DETECTION_THRESHOLD) || (stator_speed == MIN_INC) || (actual_amplitude == 0))
+            {
+                __Motor_StallHandler(STALL_TOO_LATE);
+                stall_cnt = 0;
+            }
+    }   
+}
+
 static void  __Drive_Updater(void)
 {
-    static uint8_t prev_hall = 0;
-    static split_u16_t rotor_angle;
-    static uint8_t hall_cnt = 0;
-    static uint8_t stall_cnt = 0;
-    if(status_running == true)
+    static bool alternate = false;
+    if(status_running == false) {Analog_HandlerIdle(); return;}
+    if(alternate)
     {
         add_u16k_n3((uint16_t *)&stator_angles, stator_speed);
         drive_data.a.W16  = saddle_lookup_table[stator_angles.a.H8];
         drive_data.b.W16  = saddle_lookup_table[stator_angles.b.H8];
         drive_data.c.W16  = saddle_lookup_table[stator_angles.c.H8];
         PWM_TIMER_DCY_SET(drive_data, actual_amplitude);
-        if(DRIVE_FORCED == false)
-        {
-            uint8_t hall = HALL_READ;
-            if(prev_hall != hall)
-            {
-                prev_hall = hall;
-                rotor_angle.W16 = pos_to_angle_table[HALL_TO_POS_TABLE[hall]];
-                hall_cnt ++;
-                int16_t deltaValue = (int16_t)((int24_t)rotor_angle.W16 - (int24_t)CONVERT_DEGREES_TO_U16(HALL_OFFSET) - (int24_t)stator_angles.a.W16);
-                split_u24_t tmp;
-                tmp.W24 = phase_integrator.W24 + (int24_t)(deltaValue >> 2);
-                tmp.W24 = (uint24_t)SATURATE(tmp.W24, MIN_INC * 256L, MAX_INC * 256L);
-                phase_integrator.W24 = tmp.W24;
-                tmp.W24 = phase_integrator.W24 + (int24_t)deltaValue;
-                tmp.W24 = (uint24_t)SATURATE(tmp.W24, MIN_INC * 256L, MAX_INC * 256L);
-                stator_speed = tmp.H16;
-            }
-            if(__Rollover_Event())
-            {
-                if(hall_cnt < 4) {stall_cnt ++; stator_speed >>= 1;}
-                else             {if(stall_cnt > 0) stall_cnt --;}
-                hall_cnt = 0;
-            }
-        }
-        if((STALL_DETECTION_ENABLED) && (command_enabled))
-        {
-            if(stator_speed > ERPM_TO_INC(STALL_MAXIMUM_ERPM))
-                __Motor_StallHandler(STALL_TOO_FAST);
-            if(stall_cnt > STALL_DETECTION_THRESHOLD)
-            {
-                __Motor_StallHandler(STALL_TOO_LATE);
-                stall_cnt = 0;
-            }
-        }
+        Analog_HandlerOthers(__Rollover_Event_Crt());
+        __Stall_Detection();
+        alternate = false;
+    }
+    else
+    {
+        Analog_HandlerCrt();
+        if(drive_forced == false) __Drive_Synchronization();
+        alternate = true;
     }
 }
 
@@ -287,17 +402,20 @@ uint16_t  Motor_AmplitudeGet(void)
 }
 
 
-void Motor_Start(uint16_t vbus_adc, motor_dir_t dir)
+void Motor_Start(motor_dir_t dir)
 {
     if(status_running == true)
         return;  /* already running */
-//    if(vbus_adc < VOLTAGE_TO_ADC(MOTOR_STARTUP_CURRENT * (MOTOR_RPP + 2*BOARD_MOSFET_RDSON + CURRENT_SHUNT_RESISTANCE)))
-//        status_events |= MOTOR_EVENT_UV;
-//    else
-//    {
+    __ShutOff();
+    drive_forced = true;
+    uint16_t vbus_adc = Analog_Get(ID_VBUS);
+    if(vbus_adc < VOLTAGE_TO_ADC(MOTOR_STARTUP_CURRENT * (MOTOR_RPP + 2*BOARD_MOSFET_RDSON + CURRENT_SHUNT_RESISTANCE)))
+        status_events |= MOTOR_EVENT_UV;
+    else
+    {
         uint16_t start_amp = (uint16_t)(MOTOR_STARTUP_CURRENT * (float)PWM_PER * (MOTOR_RPP + 2*BOARD_MOSFET_RDSON + CURRENT_SHUNT_RESISTANCE) / ADC_TO_VOLTAGE(vbus_adc)); 
         ATOMIC_COPY(target_amplitude, start_amp);
-        ATOMIC_COPY(actual_amplitude, start_amp);
+        sensor_cnt = 0;
         direction = dir;
         if(direction == DIR_CW)
         {
@@ -316,25 +434,38 @@ void Motor_Start(uint16_t vbus_adc, motor_dir_t dir)
         PWM_ON();
         __Motor_StallHandler(STALL_NONE); /* clear any previous stall flag */
         __Align();
-        stator_speed = ERPM_TO_INC(MOTOR_STARTUP_SPEED);
-        phase_integrator.W24 = ERPM_TO_INC(MOTOR_STARTUP_SPEED) * 256L; 
         status_running = true;
-        if(HALL_ENABLED) {hall_enabled = true; if(HALL_INVERTED) HALL_INVERT();}
-        else              hall_enabled = false;
+        uint16_t speed = (uint16_t)MOTOR_RAMP_START_SPEED;
+        uint16_t amp = 0;
+        while((speed < (uint16_t)MOTOR_RAMP_END_SPEED))
+        {
+            
+            PRECISE_DELAY_MS(1);
+            uint16_t sp = ERPM_TO_INC(speed);
+            ATOMIC_COPY(stator_speed, sp);
+            speed += MOTOR_RAMP_STEP_SPEED;
+            ATOMIC_COPY(actual_amplitude, amp);
+            if(amp < start_amp)
+                amp++;;
+        }
+        ATOMIC_COPY(actual_amplitude, start_amp);
+        ATOMIC_COPY(stator_speed, ERPM_TO_INC(speed));
+        ATOMIC_COPY(phase_integrator.W32, ERPM_TO_INC(speed) * 65536L);
+        drive_forced = DRIVE_FORCED;
         if(FAULT_COMPARATOR_EN == true)
         {
             CURRENT_TRIP_SetInterruptHandler(__Current_Trip_Handler);
         }
         if(MOTOR_STARTUP_TIME != -1)
         {
-            PRECISE_DELAY_MS(MOTOR_STARTUP_TIME);
             if(REGULATOR_SPEED_EN == true)
             {
                 __Speed_Control(true); /* initialize speed regulator */
             }
+            PRECISE_DELAY_MS(MOTOR_STARTUP_TIME);
             command_enabled = true;
-        }        
-//    }
+        }
+    }
 }
 
 
@@ -370,10 +501,10 @@ uint16_t Motor_MaxAmpGet(void)
     return MAX_AMP_GET;
 }
 
+
 /* this function has to be called once every 1 ms, on interrupt context */
 void  Motor_TimeTick(void)
 {
-    Analog_Handler();
     if(status_running == true)
     {
         if(command_enabled)

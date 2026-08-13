@@ -38,44 +38,6 @@
 #include <avr/io.h>
 #include "./port.h"
 
-//get/set BEMF_N aliases
-#define BEMF_N_SetHigh() do { PORTD_OUTSET = 0x1; } while(0)
-#define BEMF_N_SetLow() do { PORTD_OUTCLR = 0x1; } while(0)
-#define BEMF_N_Toggle() do { PORTD_OUTTGL = 0x1; } while(0)
-#define BEMF_N_GetValue() (VPORTD.IN & (0x1 << 0))
-#define BEMF_N_SetDigitalInput() do { PORTD_DIRCLR = 0x1; } while(0)
-#define BEMF_N_SetDigitalOutput() do { PORTD_DIRSET = 0x1; } while(0)
-#define BEMF_N_SetPullUp() do { PORTD_PIN0CTRL  |= PORT_PULLUPEN_bm; } while(0)
-#define BEMF_N_ResetPullUp() do { PORTD_PIN0CTRL  &= ~PORT_PULLUPEN_bm; } while(0)
-#define BEMF_N_SetInverted() do { PORTD_PIN0CTRL  |= PORT_INVEN_bm; } while(0)
-#define BEMF_N_ResetInverted() do { PORTD_PIN0CTRL  &= ~PORT_INVEN_bm; } while(0)
-#define BEMF_N_DisableInterruptOnChange() do { PORTD.PIN0CTRL = (PORTD.PIN0CTRL & ~PORT_ISC_gm) | 0x0 ; } while(0)
-#define BEMF_N_EnableInterruptForBothEdges() do { PORTD.PIN0CTRL = (PORTD.PIN0CTRL & ~PORT_ISC_gm) | 0x1 ; } while(0)
-#define BEMF_N_EnableInterruptForRisingEdge() do { PORTD.PIN0CTRL = (PORTD.PIN0CTRL & ~PORT_ISC_gm) | 0x2 ; } while(0)
-#define BEMF_N_EnableInterruptForFallingEdge() do { PORTD.PIN0CTRL = (PORTD.PIN0CTRL & ~PORT_ISC_gm) | 0x3 ; } while(0)
-#define BEMF_N_DisableDigitalInputBuffer() do { PORTD.PIN0CTRL = (PORTD.PIN0CTRL & ~PORT_ISC_gm) | 0x4 ; } while(0)
-#define BEMF_N_EnableInterruptForLowLevelSensing() do { PORTD.PIN0CTRL = (PORTD.PIN0CTRL & ~PORT_ISC_gm) | 0x5 ; } while(0)
-#define PD0_SetInterruptHandler BEMF_N_SetInterruptHandler
-
-//get/set BEMF_B aliases
-#define BEMF_B_SetHigh() do { PORTD_OUTSET = 0x20; } while(0)
-#define BEMF_B_SetLow() do { PORTD_OUTCLR = 0x20; } while(0)
-#define BEMF_B_Toggle() do { PORTD_OUTTGL = 0x20; } while(0)
-#define BEMF_B_GetValue() (VPORTD.IN & (0x1 << 5))
-#define BEMF_B_SetDigitalInput() do { PORTD_DIRCLR = 0x20; } while(0)
-#define BEMF_B_SetDigitalOutput() do { PORTD_DIRSET = 0x20; } while(0)
-#define BEMF_B_SetPullUp() do { PORTD_PIN5CTRL  |= PORT_PULLUPEN_bm; } while(0)
-#define BEMF_B_ResetPullUp() do { PORTD_PIN5CTRL  &= ~PORT_PULLUPEN_bm; } while(0)
-#define BEMF_B_SetInverted() do { PORTD_PIN5CTRL  |= PORT_INVEN_bm; } while(0)
-#define BEMF_B_ResetInverted() do { PORTD_PIN5CTRL  &= ~PORT_INVEN_bm; } while(0)
-#define BEMF_B_DisableInterruptOnChange() do { PORTD.PIN5CTRL = (PORTD.PIN5CTRL & ~PORT_ISC_gm) | 0x0 ; } while(0)
-#define BEMF_B_EnableInterruptForBothEdges() do { PORTD.PIN5CTRL = (PORTD.PIN5CTRL & ~PORT_ISC_gm) | 0x1 ; } while(0)
-#define BEMF_B_EnableInterruptForRisingEdge() do { PORTD.PIN5CTRL = (PORTD.PIN5CTRL & ~PORT_ISC_gm) | 0x2 ; } while(0)
-#define BEMF_B_EnableInterruptForFallingEdge() do { PORTD.PIN5CTRL = (PORTD.PIN5CTRL & ~PORT_ISC_gm) | 0x3 ; } while(0)
-#define BEMF_B_DisableDigitalInputBuffer() do { PORTD.PIN5CTRL = (PORTD.PIN5CTRL & ~PORT_ISC_gm) | 0x4 ; } while(0)
-#define BEMF_B_EnableInterruptForLowLevelSensing() do { PORTD.PIN5CTRL = (PORTD.PIN5CTRL & ~PORT_ISC_gm) | 0x5 ; } while(0)
-#define PD5_SetInterruptHandler BEMF_B_SetInterruptHandler
-
 //get/set CRT_P aliases
 #define CRT_P_SetHigh() do { PORTD_OUTSET = 0x8; } while(0)
 #define CRT_P_SetLow() do { PORTD_OUTCLR = 0x8; } while(0)
@@ -95,6 +57,25 @@
 #define CRT_P_EnableInterruptForLowLevelSensing() do { PORTD.PIN3CTRL = (PORTD.PIN3CTRL & ~PORT_ISC_gm) | 0x5 ; } while(0)
 #define PD3_SetInterruptHandler CRT_P_SetInterruptHandler
 
+//get/set CRT_P2 aliases
+#define CRT_P2_SetHigh() do { PORTC_OUTSET = 0x8; } while(0)
+#define CRT_P2_SetLow() do { PORTC_OUTCLR = 0x8; } while(0)
+#define CRT_P2_Toggle() do { PORTC_OUTTGL = 0x8; } while(0)
+#define CRT_P2_GetValue() (VPORTC.IN & (0x1 << 3))
+#define CRT_P2_SetDigitalInput() do { PORTC_DIRCLR = 0x8; } while(0)
+#define CRT_P2_SetDigitalOutput() do { PORTC_DIRSET = 0x8; } while(0)
+#define CRT_P2_SetPullUp() do { PORTC_PIN3CTRL  |= PORT_PULLUPEN_bm; } while(0)
+#define CRT_P2_ResetPullUp() do { PORTC_PIN3CTRL  &= ~PORT_PULLUPEN_bm; } while(0)
+#define CRT_P2_SetInverted() do { PORTC_PIN3CTRL  |= PORT_INVEN_bm; } while(0)
+#define CRT_P2_ResetInverted() do { PORTC_PIN3CTRL  &= ~PORT_INVEN_bm; } while(0)
+#define CRT_P2_DisableInterruptOnChange() do { PORTC.PIN3CTRL = (PORTC.PIN3CTRL & ~PORT_ISC_gm) | 0x0 ; } while(0)
+#define CRT_P2_EnableInterruptForBothEdges() do { PORTC.PIN3CTRL = (PORTC.PIN3CTRL & ~PORT_ISC_gm) | 0x1 ; } while(0)
+#define CRT_P2_EnableInterruptForRisingEdge() do { PORTC.PIN3CTRL = (PORTC.PIN3CTRL & ~PORT_ISC_gm) | 0x2 ; } while(0)
+#define CRT_P2_EnableInterruptForFallingEdge() do { PORTC.PIN3CTRL = (PORTC.PIN3CTRL & ~PORT_ISC_gm) | 0x3 ; } while(0)
+#define CRT_P2_DisableDigitalInputBuffer() do { PORTC.PIN3CTRL = (PORTC.PIN3CTRL & ~PORT_ISC_gm) | 0x4 ; } while(0)
+#define CRT_P2_EnableInterruptForLowLevelSensing() do { PORTC.PIN3CTRL = (PORTC.PIN3CTRL & ~PORT_ISC_gm) | 0x5 ; } while(0)
+#define PC3_SetInterruptHandler CRT_P2_SetInterruptHandler
+
 //get/set POT aliases
 #define POT_SetHigh() do { PORTD_OUTSET = 0x2; } while(0)
 #define POT_SetLow() do { PORTD_OUTCLR = 0x2; } while(0)
@@ -113,44 +94,6 @@
 #define POT_DisableDigitalInputBuffer() do { PORTD.PIN1CTRL = (PORTD.PIN1CTRL & ~PORT_ISC_gm) | 0x4 ; } while(0)
 #define POT_EnableInterruptForLowLevelSensing() do { PORTD.PIN1CTRL = (PORTD.PIN1CTRL & ~PORT_ISC_gm) | 0x5 ; } while(0)
 #define PD1_SetInterruptHandler POT_SetInterruptHandler
-
-//get/set BEMF_A aliases
-#define BEMF_A_SetHigh() do { PORTD_OUTSET = 0x10; } while(0)
-#define BEMF_A_SetLow() do { PORTD_OUTCLR = 0x10; } while(0)
-#define BEMF_A_Toggle() do { PORTD_OUTTGL = 0x10; } while(0)
-#define BEMF_A_GetValue() (VPORTD.IN & (0x1 << 4))
-#define BEMF_A_SetDigitalInput() do { PORTD_DIRCLR = 0x10; } while(0)
-#define BEMF_A_SetDigitalOutput() do { PORTD_DIRSET = 0x10; } while(0)
-#define BEMF_A_SetPullUp() do { PORTD_PIN4CTRL  |= PORT_PULLUPEN_bm; } while(0)
-#define BEMF_A_ResetPullUp() do { PORTD_PIN4CTRL  &= ~PORT_PULLUPEN_bm; } while(0)
-#define BEMF_A_SetInverted() do { PORTD_PIN4CTRL  |= PORT_INVEN_bm; } while(0)
-#define BEMF_A_ResetInverted() do { PORTD_PIN4CTRL  &= ~PORT_INVEN_bm; } while(0)
-#define BEMF_A_DisableInterruptOnChange() do { PORTD.PIN4CTRL = (PORTD.PIN4CTRL & ~PORT_ISC_gm) | 0x0 ; } while(0)
-#define BEMF_A_EnableInterruptForBothEdges() do { PORTD.PIN4CTRL = (PORTD.PIN4CTRL & ~PORT_ISC_gm) | 0x1 ; } while(0)
-#define BEMF_A_EnableInterruptForRisingEdge() do { PORTD.PIN4CTRL = (PORTD.PIN4CTRL & ~PORT_ISC_gm) | 0x2 ; } while(0)
-#define BEMF_A_EnableInterruptForFallingEdge() do { PORTD.PIN4CTRL = (PORTD.PIN4CTRL & ~PORT_ISC_gm) | 0x3 ; } while(0)
-#define BEMF_A_DisableDigitalInputBuffer() do { PORTD.PIN4CTRL = (PORTD.PIN4CTRL & ~PORT_ISC_gm) | 0x4 ; } while(0)
-#define BEMF_A_EnableInterruptForLowLevelSensing() do { PORTD.PIN4CTRL = (PORTD.PIN4CTRL & ~PORT_ISC_gm) | 0x5 ; } while(0)
-#define PD4_SetInterruptHandler BEMF_A_SetInterruptHandler
-
-//get/set BEMF_C aliases
-#define BEMF_C_SetHigh() do { PORTD_OUTSET = 0x40; } while(0)
-#define BEMF_C_SetLow() do { PORTD_OUTCLR = 0x40; } while(0)
-#define BEMF_C_Toggle() do { PORTD_OUTTGL = 0x40; } while(0)
-#define BEMF_C_GetValue() (VPORTD.IN & (0x1 << 6))
-#define BEMF_C_SetDigitalInput() do { PORTD_DIRCLR = 0x40; } while(0)
-#define BEMF_C_SetDigitalOutput() do { PORTD_DIRSET = 0x40; } while(0)
-#define BEMF_C_SetPullUp() do { PORTD_PIN6CTRL  |= PORT_PULLUPEN_bm; } while(0)
-#define BEMF_C_ResetPullUp() do { PORTD_PIN6CTRL  &= ~PORT_PULLUPEN_bm; } while(0)
-#define BEMF_C_SetInverted() do { PORTD_PIN6CTRL  |= PORT_INVEN_bm; } while(0)
-#define BEMF_C_ResetInverted() do { PORTD_PIN6CTRL  &= ~PORT_INVEN_bm; } while(0)
-#define BEMF_C_DisableInterruptOnChange() do { PORTD.PIN6CTRL = (PORTD.PIN6CTRL & ~PORT_ISC_gm) | 0x0 ; } while(0)
-#define BEMF_C_EnableInterruptForBothEdges() do { PORTD.PIN6CTRL = (PORTD.PIN6CTRL & ~PORT_ISC_gm) | 0x1 ; } while(0)
-#define BEMF_C_EnableInterruptForRisingEdge() do { PORTD.PIN6CTRL = (PORTD.PIN6CTRL & ~PORT_ISC_gm) | 0x2 ; } while(0)
-#define BEMF_C_EnableInterruptForFallingEdge() do { PORTD.PIN6CTRL = (PORTD.PIN6CTRL & ~PORT_ISC_gm) | 0x3 ; } while(0)
-#define BEMF_C_DisableDigitalInputBuffer() do { PORTD.PIN6CTRL = (PORTD.PIN6CTRL & ~PORT_ISC_gm) | 0x4 ; } while(0)
-#define BEMF_C_EnableInterruptForLowLevelSensing() do { PORTD.PIN6CTRL = (PORTD.PIN6CTRL & ~PORT_ISC_gm) | 0x5 ; } while(0)
-#define PD6_SetInterruptHandler BEMF_C_SetInterruptHandler
 
 //get/set CRT_REF aliases
 #define CRT_REF_SetHigh() do { PORTD_OUTSET = 0x80; } while(0)
@@ -466,48 +409,6 @@ void PIN_MANAGER_Initialize();
 
 /**
  * @ingroup  pinsdriver
- * @brief Default Interrupt Handler for BEMF_N pin. 
- *        This is a predefined interrupt handler to be used together with the BEMF_N_SetInterruptHandler() method.
- *        This handler is called every time the BEMF_N ISR is executed. 
- * @pre PIN_MANAGER_Initialize() has been called at least once
- * @param none
- * @return none
- */
-void BEMF_N_DefaultInterruptHandler(void);
-
-/**
- * @ingroup  pinsdriver
- * @brief Interrupt Handler Setter for BEMF_N pin input-sense-config functionality.
- *        Allows selecting an interrupt handler for BEMF_N at application runtime
- * @pre PIN_MANAGER_Initialize() has been called at least once
- * @param InterruptHandler function pointer.
- * @return none
- */
-void BEMF_N_SetInterruptHandler(void (* interruptHandler)(void)) ; 
-
-/**
- * @ingroup  pinsdriver
- * @brief Default Interrupt Handler for BEMF_B pin. 
- *        This is a predefined interrupt handler to be used together with the BEMF_B_SetInterruptHandler() method.
- *        This handler is called every time the BEMF_B ISR is executed. 
- * @pre PIN_MANAGER_Initialize() has been called at least once
- * @param none
- * @return none
- */
-void BEMF_B_DefaultInterruptHandler(void);
-
-/**
- * @ingroup  pinsdriver
- * @brief Interrupt Handler Setter for BEMF_B pin input-sense-config functionality.
- *        Allows selecting an interrupt handler for BEMF_B at application runtime
- * @pre PIN_MANAGER_Initialize() has been called at least once
- * @param InterruptHandler function pointer.
- * @return none
- */
-void BEMF_B_SetInterruptHandler(void (* interruptHandler)(void)) ; 
-
-/**
- * @ingroup  pinsdriver
  * @brief Default Interrupt Handler for CRT_P pin. 
  *        This is a predefined interrupt handler to be used together with the CRT_P_SetInterruptHandler() method.
  *        This handler is called every time the CRT_P ISR is executed. 
@@ -529,6 +430,27 @@ void CRT_P_SetInterruptHandler(void (* interruptHandler)(void)) ;
 
 /**
  * @ingroup  pinsdriver
+ * @brief Default Interrupt Handler for CRT_P2 pin. 
+ *        This is a predefined interrupt handler to be used together with the CRT_P2_SetInterruptHandler() method.
+ *        This handler is called every time the CRT_P2 ISR is executed. 
+ * @pre PIN_MANAGER_Initialize() has been called at least once
+ * @param none
+ * @return none
+ */
+void CRT_P2_DefaultInterruptHandler(void);
+
+/**
+ * @ingroup  pinsdriver
+ * @brief Interrupt Handler Setter for CRT_P2 pin input-sense-config functionality.
+ *        Allows selecting an interrupt handler for CRT_P2 at application runtime
+ * @pre PIN_MANAGER_Initialize() has been called at least once
+ * @param InterruptHandler function pointer.
+ * @return none
+ */
+void CRT_P2_SetInterruptHandler(void (* interruptHandler)(void)) ; 
+
+/**
+ * @ingroup  pinsdriver
  * @brief Default Interrupt Handler for POT pin. 
  *        This is a predefined interrupt handler to be used together with the POT_SetInterruptHandler() method.
  *        This handler is called every time the POT ISR is executed. 
@@ -547,48 +469,6 @@ void POT_DefaultInterruptHandler(void);
  * @return none
  */
 void POT_SetInterruptHandler(void (* interruptHandler)(void)) ; 
-
-/**
- * @ingroup  pinsdriver
- * @brief Default Interrupt Handler for BEMF_A pin. 
- *        This is a predefined interrupt handler to be used together with the BEMF_A_SetInterruptHandler() method.
- *        This handler is called every time the BEMF_A ISR is executed. 
- * @pre PIN_MANAGER_Initialize() has been called at least once
- * @param none
- * @return none
- */
-void BEMF_A_DefaultInterruptHandler(void);
-
-/**
- * @ingroup  pinsdriver
- * @brief Interrupt Handler Setter for BEMF_A pin input-sense-config functionality.
- *        Allows selecting an interrupt handler for BEMF_A at application runtime
- * @pre PIN_MANAGER_Initialize() has been called at least once
- * @param InterruptHandler function pointer.
- * @return none
- */
-void BEMF_A_SetInterruptHandler(void (* interruptHandler)(void)) ; 
-
-/**
- * @ingroup  pinsdriver
- * @brief Default Interrupt Handler for BEMF_C pin. 
- *        This is a predefined interrupt handler to be used together with the BEMF_C_SetInterruptHandler() method.
- *        This handler is called every time the BEMF_C ISR is executed. 
- * @pre PIN_MANAGER_Initialize() has been called at least once
- * @param none
- * @return none
- */
-void BEMF_C_DefaultInterruptHandler(void);
-
-/**
- * @ingroup  pinsdriver
- * @brief Interrupt Handler Setter for BEMF_C pin input-sense-config functionality.
- *        Allows selecting an interrupt handler for BEMF_C at application runtime
- * @pre PIN_MANAGER_Initialize() has been called at least once
- * @param InterruptHandler function pointer.
- * @return none
- */
-void BEMF_C_SetInterruptHandler(void (* interruptHandler)(void)) ; 
 
 /**
  * @ingroup  pinsdriver

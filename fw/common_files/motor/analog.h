@@ -23,26 +23,38 @@
 #define ANALOG_H
 
 #include <stdint.h>
-
+#include <stdbool.h>
 
 typedef enum
 {
 	ID_POT = 0,
 	ID_VBUS,
-	ID_CRT,
+	ID_CRT_A,
+    ID_CRT_B,
+    ID_CRT_C,
     ID_REF,
     ID_MAX,
 } analog_id_t;
+
+typedef struct
+{
+    uint32_t result;
+    uint16_t samples;
+} analog_bus_crt_t;
 
 typedef void (*analog_fault_handler_t)(uint8_t);
 
 typedef void (*analog_adapt_pwm_handler_t)(uint16_t);
 
-void     Analog_Initialize(void);
-uint16_t Analog_Max(void);
-uint16_t Analog_Get(analog_id_t id);
-void     Analog_EmergencyStop_Register(analog_id_t id, analog_fault_handler_t handler, uint16_t threshold, uint8_t event);
-void     Analog_Handler(void);
+void             Analog_Initialize(void);
+uint16_t         Analog_Max(void);
+uint16_t         Analog_Get(analog_id_t id);
+void             Analog_EmergencyStop_Register(analog_id_t id, analog_fault_handler_t handler, uint16_t threshold, uint8_t event);
+void             Analog_HandlerCrt(void);
+void             Analog_HandlerOthers(bool new_bus_crt_sample);
+void             Analog_HandlerIdle(void);
+bool             Analog_NewCrtSample(void);
+analog_bus_crt_t Analog_BusCurrentGet(void); 
 
 #endif /* ANALOG_H */
 

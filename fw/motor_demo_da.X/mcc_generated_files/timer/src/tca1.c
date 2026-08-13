@@ -53,7 +53,7 @@ void TCA1_Initialize(void)
         | (1 << TCA_SINGLE_CMP0EN_bp)   // CMP0EN enabled
         | (1 << TCA_SINGLE_CMP1EN_bp)   // CMP1EN enabled
         | (1 << TCA_SINGLE_CMP2EN_bp)   // CMP2EN enabled
-        | (TCA_SINGLE_WGMODE_DSBOTTOM_gc);  // WGMODE DSBOTTOM
+        | (TCA_SINGLE_WGMODE_DSTOP_gc);  // WGMODE DSTOP
 
     TCA1.SINGLE.CTRLC = (0 << TCA_SINGLE_CMP0OV_bp)   // CMP0OV disabled
         | (0 << TCA_SINGLE_CMP1OV_bp)   // CMP1OV disabled

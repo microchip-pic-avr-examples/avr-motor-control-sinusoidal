@@ -1,0 +1,8 @@
+{
+    "configurations": [
+        {
+            "reference": "@conf1",
+            "toolSerial": "MCHP3280031800001651"
+        }
+    ]
+}

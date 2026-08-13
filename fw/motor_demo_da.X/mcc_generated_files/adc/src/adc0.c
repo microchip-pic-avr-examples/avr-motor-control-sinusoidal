@@ -61,7 +61,7 @@ void ADC0_Initialize(void)
     ADC0.MUXNEG = (ADC_MUXNEG_GND_gc);               /* MUXNEG (GND) */
     ADC0.COMMAND = (0 << ADC_STCONV_bp)               /* STCONV (disabled) */
 				|(0 << ADC_SPCONV_bp);              /* SPCONV (disabled) */
-    ADC0.EVCTRL = (0 << ADC_STARTEI_bp);             /* STARTEI (disabled) */
+    ADC0.EVCTRL = (1 << ADC_STARTEI_bp);             /* STARTEI (enabled) */
     ADC0.DBGCTRL = (0 << ADC_DBGRUN_bp);              /* DBGRUN (disabled) */
     ADC0.WINHT = 0x0;                               /* WINHT (0x0) */
     ADC0.WINLT = 0x0;                               /* WINLT (0x0) */

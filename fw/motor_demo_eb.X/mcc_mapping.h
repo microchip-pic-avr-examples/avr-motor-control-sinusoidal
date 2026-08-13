@@ -1,5 +1,5 @@
 /*
-© [2026] Microchip Technology Inc. and its subsidiaries.
+ï¿½ [2026] Microchip Technology Inc. and its subsidiaries.
  
     Subject to your compliance with these terms, you may use Microchip 
     software and any derivatives exclusively with Microchip products. 
@@ -27,8 +27,8 @@
 #include "frac-lib.h"
 #include "mcc_generated_files/system/system.h"
 
-#define __CPU_STRING__                  "AVR16EB32"
-#define DEBUG_BUFF_SIZE                 100         /* This has to be an even number */
+#define __CPU_STRING__                      "AVR16EB32"
+#define DEBUG_BUFF_SIZE                     1200         /* This has to be an even number */
 
 /* external/internal comparator - fault trip */
 #define FAULT_CONTROL                       WEX0.FAULTCTRL
@@ -39,50 +39,53 @@
 #define FAULT_COMPARATOR_EDGE               true /* true - on rising edge  | false - on falling edge */
 #define CURRENT_TRIP_LEVEL_SET              AC1_DACRefValueSet
 #define AC_REF_DAC_MAX                      255
+#define ADC_MAX                             4095
 
-#define PWM_PER                             512  // 51.2us
+#define PWM_PER                             500  // 50us
 #define PWM_DT                              5    // 250ns
 
 /* timer used to generate PWM and sample comparator */
-#define PWM_TIMER_SYNC()                    do{WEX0_DeadTimeBothSidesSet(PWM_DT);}while(0)
+extern void TCE_TCB_sync_start(void);
+#define PWM_TIMER_SYNC()                    do{\
+                                            TCE0_Compare3Set(PWM_PER);\
+                                            WEX0_DeadTimeBothSidesSet(PWM_DT);\
+                                            }while(0)
 #define PWM_TIMER_DCY_SET(X, Y)             do{\
-                                            TCE0_AmplitudeSet((Y)<<6);\
-                                            TCE0_CompareChannels012BufferedSet(X.a.W16, X.b.W16, X.c.W16);\
+                                            fmul_16x16k_n3((uint16_t*)&(X), (Y));\
+                                            TCE0_CompareChannels012BufferedSet(X.a.W16 + 6, X.b.W16 + 6, X.c.W16 + 6);\
                                             }while(0)
 #define PWM_OFF()                           do{WEX0_PatternGenerationOverrideSet(0xFF);}while(0)                          
 #define PWM_ON()                            do{WEX0_PatternGenerationOverrideSet(0x00);}while(0)
 #define PWM_TIMER_CB_REGISTER               TCE0_OverflowCallbackRegister
 
 /* periodic 1ms software timer */
-#define SW_TIMER_CB_REGISTER       RTC_SetPITIsrCallback
-#define SW_TIMER_PERIOD            (1260) /* us */
+#define SW_TIMER_CB_REGISTER                RTC_SetPITIsrCallback
+#define SW_TIMER_PERIOD                     (1260) /* us */
 
 /* ADC pins definitions */
-#define CRT_P_ADC_PIN           ADC_MUXPOS_AIN3_gc  // PD3
-#define CRT_N_ADC_PIN           ADC_MUXPOS_AIN7_gc  // PD7
-#define VBUS_ADC_PIN            ADC_MUXPOS_AIN20_gc // PF4
-#define POT_ADC_PIN             ADC_MUXPOS_AIN1_gc  // PD1
+#define CRT_A_ADC_PIN                       ADC_MUXPOS_AIN3_gc  // PD3
+#define CRT_B_ADC_PIN                       ADC_MUXPOS_AIN31_gc // PC3
+#define CRT_N_ADC_PIN                       ADC_MUXPOS_AIN7_gc  // PD7
+#define VBUS_ADC_PIN                        ADC_MUXPOS_AIN20_gc // PF4
+#define POT_ADC_PIN                         ADC_MUXPOS_AIN1_gc  // PD1
 
 /* ADC APIs */
-#define ADC_MUX_SET             ADC0_ChannelSelect
-#define ADC_CONV_START          ADC0_ConversionStart
-#define ADC_RESULT_GET          ADC0_ConversionResultGet
-#define ADC_RESOLUTION_GET      ADC0_ResolutionGet
-#define ADC_NO_CONV_PROGRESS    ADC0_IsConversionDone
+#define ADC_MUX_SET                         ADC0_ChannelSelect
+#define ADC_RESULT_GET                      ADC0_ConversionResultGet
+#define ADC_MUX_GET                         ADC0.MUXPOS
 
-
-static void System_Reset_Command(void)  __attribute__ ((unused));
-static void System_Reset_Command(void)  { _PROTECTED_WRITE(RSTCTRL.SWRR, RSTCTRL_SWRE_bm);  while(true);}
+static void System_Reset_Command(void)      __attribute__ ((unused));
+static void System_Reset_Command(void)      { _PROTECTED_WRITE(RSTCTRL.SWRR, RSTCTRL_SWRE_bm);  while(true);}
 
 /* Button polarity */
-#define BUTTON_ACTIVE           0
+#define BUTTON_ACTIVE                       0
 
 /* PWM Input capture */
-#define PWM_IN_PIN_REGISTER     PWM_IN_SetInterruptHandler
-#define PWM_IN_PIN_READ         PWM_IN_GetValue
-#define PWM_IN_TMR_REGISTER     TCF0_OverflowCallbackRegister
-#define PWM_IN_TMR_CLEAR()      TCF0_CounterSet(0)
-#define PWM_IN_TMR_READ         (uint16_t)TCF0_CounterGet
+#define PWM_IN_PIN_REGISTER                 PWM_IN_SetInterruptHandler
+#define PWM_IN_PIN_READ                     PWM_IN_GetValue
+#define PWM_IN_TMR_REGISTER                 TCF0_OverflowCallbackRegister
+#define PWM_IN_TMR_CLEAR()                  TCF0_CounterSet(0)
+#define PWM_IN_TMR_READ                     (uint16_t)TCF0_CounterGet
 
 /* HALL Sensored Functions */
 
@@ -91,12 +94,6 @@ static void System_Reset_Command(void)  { _PROTECTED_WRITE(RSTCTRL.SWRR, RSTCTRL
 #define HALL_B_PIN                          PIN2CTRL
 #define HALL_C_PIN                          PIN3CTRL
 #define HALL_READ                           ((PORTF.IN & (PIN1_bm | PIN2_bm | PIN3_bm)) >> 1)                          
-#define HALL_INVERT()                       do{\
-                                            HALL_PORT.HALL_A_PIN = PORT_INVEN_bm;\
-                                            HALL_PORT.HALL_B_PIN = PORT_INVEN_bm;\
-                                            HALL_PORT.HALL_C_PIN = PORT_INVEN_bm;\
-                                            }while(0)
 
 
 #endif /* MCC_MAPPING_H */
-

@@ -64,7 +64,7 @@ static void _Debug_PrintRow(uint16_t index, uint16_t id, uint8_t sample_size, lo
 }
 
 
-bool Log_Decimate(uint8_t level, uint8_t *pCounter)
+bool Log_Decimate(uint16_t level, uint16_t *pCounter)
 {
     (*pCounter)++;
     if(*pCounter == level)

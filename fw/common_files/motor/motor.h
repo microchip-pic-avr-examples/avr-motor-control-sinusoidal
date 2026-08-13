@@ -57,13 +57,13 @@ typedef enum
 /*************************************/
 
 void           Motor_Initialize(void);
-void           Motor_Start(uint16_t vbus_adc, motor_dir_t dir);
+void           Motor_Start(motor_dir_t dir);
 void           Motor_Stop(void);
 void           Motor_Fault(motor_fault_t);
 void           Motor_CommandSet(uint16_t ref);
 uint16_t       Motor_MaxAmpGet(void);
 motor_status_t Motor_StatusGet(void);
-uint16_t       Motor_ErpmGet(void);
+uint16_t       Motor_ErpmGet(void);    
 uint16_t       Motor_AmplitudeGet(void);
 void           Motor_TimeTick(void);  /* this function has to be called once every 1 ms, on interrupt context */
 

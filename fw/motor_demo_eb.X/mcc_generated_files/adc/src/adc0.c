@@ -59,18 +59,18 @@ void ADC0_Initialize(void)
     ADC0.INTFLAGS &= ~(ADC_RESRDY_bm|ADC_WCMP_bm);
 
     // Initialize all other registers
-    ADC0.CTRLB = (ADC_PRESC_DIV2_gc);               /* PRESC (System clock divided by 2) */
+    ADC0.CTRLB = (ADC_PRESC_DIV10_gc);              /* PRESC (System clock divided by 10) */
     ADC0.CTRLC = (ADC_REFSEL_VDD_gc);               /* REFSEL (VDD) */
     ADC0.CTRLD = (ADC_WINCM_NONE_gc)                /* WINCM (No Window Comparison) */
 				|(ADC_WINSRC_SAMPLE_gc);            /* WINSRC (SAMPLE) */
-    ADC0.CTRLE = 0x6;                               /* SAMPDUR (0x6) */
+    ADC0.CTRLE = 0xA;                               /* SAMPDUR (0xA) */
     ADC0.CTRLF = (ADC_CHOPPING_DISABLE_gc)          /* CHOPPING (DISABLE) */
 				|(0 << ADC_FREERUN_bp)              /* FREERUN (disabled) */
 				|(0 << ADC_LEFTADJ_bp)              /* LEFTADJ (disabled) */
 				|(ADC_SAMPNUM_NONE_gc);             /* SAMPNUM (No accumulation) */
     ADC0.COMMAND = (0 << ADC_DIFF_bp)                 /* DIFF (disabled) */
 				|(ADC_MODE_SINGLE_12BIT_gc)         /* MODE (SINGLE_12BIT) */
-				|(ADC_START_IMMEDIATE_gc);          /* START (Start a conversion immediately. This will be set back to STOP when the first conversion is done, unless Free-Running mode is enabled) */
+				|(ADC_START_EVENT_TRIGGER_gc);      /* START (Start when an event is received) */
     ADC0.DBGCTRL = (0 << ADC_DBGRUN_bp);              /* DBGRUN (disabled) */
     ADC0.MUXPOS = (ADC_MUXPOS_AIN0_gc)               /* MUXPOS (AIN0) */
 				|(ADC_VIA_DIRECT_gc);               /* VIA (DIRECT) */

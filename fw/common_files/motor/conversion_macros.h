@@ -29,11 +29,12 @@
 #include "mcc_mapping.h"
 #include "config.h"
 
-#define ADC_MAX_SCALE                     (float)(Analog_Max())
+#define ADC_MAX_SCALE                     (float)ADC_MAX
 #define DAC_MAX_SCALE                     AC_REF_DAC_MAX
 #define CURRENT_AMPLIFIER_OFFSET          (ANALOG_REFERENCE / 2)
-#define SECTORS_NUMBER                    (6.0)
-#define PWM_FREQUENCY                     (20000UL) // Hz
+#define PWM_FREQUENCY                     (F_CPU / (2.0 * (float)PWM_PER)) // Hz - 50us
+#define SAMPLING_FREQUENCY                (PWM_FREQUENCY / 2.0)            // Hz - PWM_FREQUENCY divide by 2
+#define SQRT3                             1.7320508075688772935
 
 /* potentiometer conversion formulas to/from percents */
 #define ADC_TO_PERCENT(X)                 (((float)(X) + 0.5) * 100.0 / (ADC_MAX_SCALE + 1))
@@ -44,8 +45,9 @@
 #define VOLTAGE_TO_ADC(X)                 (uint16_t)((float)(X) * (ADC_MAX_SCALE + 1) / (VBUS_DIVIDER * ANALOG_REFERENCE) + 0.5)
 
 /* current conversion formulas to/from milliamperes */
-#define ADC_TO_CURRENT(P, N)              ((((float)((P) - (N)) + 0.5) * ANALOG_REFERENCE / (ADC_MAX_SCALE + 1)) / (CURRENT_AMPLIFIER_GAIN * CURRENT_SHUNT_RESISTANCE))
+#define ADC_TO_CURRENT(ADC, N)            ((((float)((ADC) / (N)) + 0.5) * ANALOG_REFERENCE / (ADC_MAX_SCALE + 1)) / (CURRENT_AMPLIFIER_GAIN * CURRENT_SHUNT_RESISTANCE))
 #define CURRENT_TO_ADC(MA)                (uint16_t)( ((float)(MA) * CURRENT_AMPLIFIER_GAIN * CURRENT_SHUNT_RESISTANCE) * (ADC_MAX_SCALE + 1) / ANALOG_REFERENCE + 0.5)
+#define CURRENT_CONSTANT                  (M_PI / (4.0 * SQRT3))
 
 /* current conversion formulas to/from milliamperes - reference DAC */
 #define ACREF_TO_CURRENT(X)               ( ((float)(X) * ANALOG_REFERENCE / DAC_MAX_SCALE - CURRENT_AMPLIFIER_OFFSET) / (CURRENT_AMPLIFIER_GAIN * CURRENT_SHUNT_RESISTANCE) )
@@ -56,16 +58,16 @@
 #define CONVERT_CLKS_TO_US(CLKS)          ((float)(CLKS) * 1000000.0 / (F_CPU))
 
 /* Mapping from 0 - 359.99 electrical degrees -> 0 - 65535 */
-#define CONVERT_DEGREES_TO_U16(DEG)        (uint16_t)((float)(DEG) * 65536.0 / 360.0 + 0.5)
-#define CONVERT_U16_TO_DEGREES(U16)        ((float)(U16) * 360.0 / 65536.0)
+#define CONVERT_DEGREES_TO_U16(DEG)       (uint16_t)((float)(DEG) * 65536.0 / 360.0 + 0.5)
+#define CONVERT_U16_TO_DEGREES(U16)       ((float)(U16) * 360.0 / 65536.0)
 
 /* these macros must not be called with variable arguments within interrupt context */
-#define ERPM_TO_INC(RPM)                    (uint16_t)(((float)(RPM) * 65536.0) / ((float)(PWM_FREQUENCY) * 60.0) + 0.5)
-#define INC_TO_ERPM(INC)                    (float)((PWM_FREQUENCY) * (float)(INC) * 60.0 / 65536.0)
+#define ERPM_TO_INC(RPM)                  (uint16_t)(((float)(RPM) * 65536.0) / (SAMPLING_FREQUENCY * 60.0) + 0.5)
+#define INC_TO_ERPM(INC)                  (float)((SAMPLING_FREQUENCY) * (float)(INC) * 60.0 / 65536.0)
 
 /* these macros must not be called with variable arguments within interrupt context */
-#define HZ_TO_INC(HZ)                    (uint16_t)(((float)(HZ) * 65536.0) / ((float)(PWM_FREQUENCY)) + 0.5)
-#define INC_TO_HZ(MCSPEED)               (float)(PWM_FREQUENCY) * (float)(MCSPEED) / 65536.0
+#define HZ_TO_INC(HZ)                     (uint16_t)(((float)(HZ) * 65536.0) / SAMPLING_FREQUENCY + 0.5)
+#define INC_TO_HZ(INC)                    (float)(SAMPLING_FREQUENCY) * (float)(INC) / 65536.0
 
 typedef __int24  int24_t;
 typedef __uint24 uint24_t;
@@ -164,6 +166,11 @@ typedef union
 	{
 		uint8_t  L8;
 		int24_t  H24;
+	};
+    struct
+	{
+		uint24_t L24;
+		 int8_t  H8;
 	};
 	int32_t W32;
 } split_i32_t;

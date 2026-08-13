@@ -58,16 +58,10 @@ const uint16_t saddle_lookup_table[] =
     10533, 11291, 12043, 12787, 13524, 14252, 14972, 15683
 };
 
-/* CW */
-const uint8_t hall_to_pos_table_cw[] = {0, 2, 4, 3, 6, 1, 5, 0};
-
-/* CCW */
-const uint8_t hall_to_pos_table_ccw[] =  {0, 4, 2, 3, 6, 5, 1, 0};
-
 const uint16_t pos_to_angle_table[] = 
 {
-    0, 
-    CONVERT_DEGREES_TO_U16(60.0), 
+    0,
+    CONVERT_DEGREES_TO_U16(60.0),
     CONVERT_DEGREES_TO_U16(120.0), 
     CONVERT_DEGREES_TO_U16(180.0), 
     CONVERT_DEGREES_TO_U16(240.0), 
@@ -75,3 +69,9 @@ const uint16_t pos_to_angle_table[] =
     CONVERT_DEGREES_TO_U16(359.99), 
     0
 };
+
+/* CW */
+const uint8_t pos_table_cw[] = {0, 2, 4, 3, 6, 1, 5, 0};
+
+/* CCW */
+const uint8_t pos_table_ccw[] =  {0, 2, 6, 1, 4, 3, 5, 0};

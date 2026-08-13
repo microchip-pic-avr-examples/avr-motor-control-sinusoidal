@@ -45,7 +45,7 @@ typedef enum
 } log_buf_t;
 
 
-bool Log_Decimate(uint8_t, uint8_t *);
+bool Log_Decimate(uint16_t, uint16_t *);
 void Log_Start(log_buf_t);
 void Log_Stop(void);
 void Log_Add8 (uint8_t);

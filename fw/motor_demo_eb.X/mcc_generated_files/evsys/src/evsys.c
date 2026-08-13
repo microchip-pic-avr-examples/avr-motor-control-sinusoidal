@@ -36,8 +36,8 @@ int8_t EVSYS_Initialize()
 {
     //CHANNEL AC1_OUT; 
     EVSYS.CHANNEL0 = 0x21;
-    //CHANNEL OFF; 
-    EVSYS.CHANNEL1 = 0x0;
+    //CHANNEL TCE0_CMP3; 
+    EVSYS.CHANNEL1 = 0x87;
     //CHANNEL OFF; 
     EVSYS.CHANNEL2 = 0x0;
     //CHANNEL OFF; 
@@ -46,8 +46,8 @@ int8_t EVSYS_Initialize()
     EVSYS.CHANNEL4 = 0x0;
     //CHANNEL OFF; 
     EVSYS.CHANNEL5 = 0x0;
-    //USER OFF; 
-    EVSYS.USERADC0START = 0x0;
+    //USER CHANNEL1; 
+    EVSYS.USERADC0START = 0x2;
     //USER OFF; 
     EVSYS.USERCCLLUT0A = 0x0;
     //USER OFF; 

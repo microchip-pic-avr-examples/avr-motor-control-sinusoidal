@@ -39,7 +39,6 @@ void SYSTEM_Initialize(void)
     CLOCK_Initialize();
     PIN_MANAGER_Initialize();
     ADC0_Initialize();
-    AC0_Initialize();
     AC1_Initialize();
     EVSYS_Initialize();
     RSTCTRL_Initialize();

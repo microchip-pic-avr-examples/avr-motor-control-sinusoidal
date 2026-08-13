@@ -43,7 +43,7 @@ void SYSTEM_Initialize(void)
     TCA1_Initialize();
     TCB2_Initialize();
     AC0_Initialize();
-    AC1_Initialize();
+    EVSYS_Initialize();
     RSTCTRL_Initialize();
     RTC_Initialize();
     USART1_Initialize();

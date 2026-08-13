@@ -35,8 +35,6 @@
 #include "../pins.h"
 
 static void (*CRT_InterruptHandler)(void);
-static void (*BEMF_N_InterruptHandler)(void);
-static void (*BEMF_A_InterruptHandler)(void);
 static void (*DRIVE_L0_InterruptHandler)(void);
 static void (*DRIVE_L1_InterruptHandler)(void);
 static void (*DRIVE_L2_InterruptHandler)(void);
@@ -47,9 +45,8 @@ static void (*RXD_InterruptHandler)(void);
 static void (*TXD_InterruptHandler)(void);
 static void (*VBUS_InterruptHandler)(void);
 static void (*POT_InterruptHandler)(void);
-static void (*BEMF_B_InterruptHandler)(void);
-static void (*BEMF_C_InterruptHandler)(void);
 static void (*CRT_REF_InterruptHandler)(void);
+static void (*CRT2_InterruptHandler)(void);
 static void (*PWM_IN_InterruptHandler)(void);
 static void (*BUTTON_InterruptHandler)(void);
 static void (*HALL_A_InterruptHandler)(void);
@@ -107,14 +104,14 @@ void PIN_MANAGER_Initialize()
     PORTC.PIN7CTRL = 0x8;
     PORTD.PIN0CTRL = 0x4;
     PORTD.PIN1CTRL = 0x4;
-    PORTD.PIN2CTRL = 0x4;
+    PORTD.PIN2CTRL = 0x0;
     PORTD.PIN3CTRL = 0x0;
-    PORTD.PIN4CTRL = 0x4;
+    PORTD.PIN4CTRL = 0x0;
     PORTD.PIN5CTRL = 0x0;
-    PORTD.PIN6CTRL = 0x4;
-    PORTD.PIN7CTRL = 0x4;
+    PORTD.PIN6CTRL = 0x0;
+    PORTD.PIN7CTRL = 0x0;
     PORTE.PIN0CTRL = 0x0;
-    PORTE.PIN1CTRL = 0x0;
+    PORTE.PIN1CTRL = 0x4;
     PORTE.PIN2CTRL = 0x4;
     PORTE.PIN3CTRL = 0x0;
     PORTE.PIN4CTRL = 0x0;
@@ -145,8 +142,6 @@ void PIN_MANAGER_Initialize()
 
   // register default ISC callback functions at runtime; use these methods to register a custom function
     CRT_SetInterruptHandler(CRT_DefaultInterruptHandler);
-    BEMF_N_SetInterruptHandler(BEMF_N_DefaultInterruptHandler);
-    BEMF_A_SetInterruptHandler(BEMF_A_DefaultInterruptHandler);
     DRIVE_L0_SetInterruptHandler(DRIVE_L0_DefaultInterruptHandler);
     DRIVE_L1_SetInterruptHandler(DRIVE_L1_DefaultInterruptHandler);
     DRIVE_L2_SetInterruptHandler(DRIVE_L2_DefaultInterruptHandler);
@@ -157,9 +152,8 @@ void PIN_MANAGER_Initialize()
     TXD_SetInterruptHandler(TXD_DefaultInterruptHandler);
     VBUS_SetInterruptHandler(VBUS_DefaultInterruptHandler);
     POT_SetInterruptHandler(POT_DefaultInterruptHandler);
-    BEMF_B_SetInterruptHandler(BEMF_B_DefaultInterruptHandler);
-    BEMF_C_SetInterruptHandler(BEMF_C_DefaultInterruptHandler);
     CRT_REF_SetInterruptHandler(CRT_REF_DefaultInterruptHandler);
+    CRT2_SetInterruptHandler(CRT2_DefaultInterruptHandler);
     PWM_IN_SetInterruptHandler(PWM_IN_DefaultInterruptHandler);
     BUTTON_SetInterruptHandler(BUTTON_DefaultInterruptHandler);
     HALL_A_SetInterruptHandler(HALL_A_DefaultInterruptHandler);
@@ -184,32 +178,6 @@ void CRT_DefaultInterruptHandler(void)
 {
     // add your CRT interrupt custom code
     // or set custom function using CRT_SetInterruptHandler()
-}
-/**
-  Allows selecting an interrupt handler for BEMF_N at application runtime
-*/
-void BEMF_N_SetInterruptHandler(void (* interruptHandler)(void)) 
-{
-    BEMF_N_InterruptHandler = interruptHandler;
-}
-
-void BEMF_N_DefaultInterruptHandler(void)
-{
-    // add your BEMF_N interrupt custom code
-    // or set custom function using BEMF_N_SetInterruptHandler()
-}
-/**
-  Allows selecting an interrupt handler for BEMF_A at application runtime
-*/
-void BEMF_A_SetInterruptHandler(void (* interruptHandler)(void)) 
-{
-    BEMF_A_InterruptHandler = interruptHandler;
-}
-
-void BEMF_A_DefaultInterruptHandler(void)
-{
-    // add your BEMF_A interrupt custom code
-    // or set custom function using BEMF_A_SetInterruptHandler()
 }
 /**
   Allows selecting an interrupt handler for DRIVE_L0 at application runtime
@@ -342,32 +310,6 @@ void POT_DefaultInterruptHandler(void)
     // or set custom function using POT_SetInterruptHandler()
 }
 /**
-  Allows selecting an interrupt handler for BEMF_B at application runtime
-*/
-void BEMF_B_SetInterruptHandler(void (* interruptHandler)(void)) 
-{
-    BEMF_B_InterruptHandler = interruptHandler;
-}
-
-void BEMF_B_DefaultInterruptHandler(void)
-{
-    // add your BEMF_B interrupt custom code
-    // or set custom function using BEMF_B_SetInterruptHandler()
-}
-/**
-  Allows selecting an interrupt handler for BEMF_C at application runtime
-*/
-void BEMF_C_SetInterruptHandler(void (* interruptHandler)(void)) 
-{
-    BEMF_C_InterruptHandler = interruptHandler;
-}
-
-void BEMF_C_DefaultInterruptHandler(void)
-{
-    // add your BEMF_C interrupt custom code
-    // or set custom function using BEMF_C_SetInterruptHandler()
-}
-/**
   Allows selecting an interrupt handler for CRT_REF at application runtime
 */
 void CRT_REF_SetInterruptHandler(void (* interruptHandler)(void)) 
@@ -379,6 +321,19 @@ void CRT_REF_DefaultInterruptHandler(void)
 {
     // add your CRT_REF interrupt custom code
     // or set custom function using CRT_REF_SetInterruptHandler()
+}
+/**
+  Allows selecting an interrupt handler for CRT2 at application runtime
+*/
+void CRT2_SetInterruptHandler(void (* interruptHandler)(void)) 
+{
+    CRT2_InterruptHandler = interruptHandler;
+}
+
+void CRT2_DefaultInterruptHandler(void)
+{
+    // add your CRT2 interrupt custom code
+    // or set custom function using CRT2_SetInterruptHandler()
 }
 /**
   Allows selecting an interrupt handler for PWM_IN at application runtime
@@ -594,14 +549,6 @@ ISR(PORTC_PORT_vect)
 ISR(PORTD_PORT_vect)
 { 
     // Call the interrupt handler for the callback registered at runtime
-    if(VPORTD.INTFLAGS & PORT_INT7_bm)
-    {
-       BEMF_N_InterruptHandler(); 
-    }
-    if(VPORTD.INTFLAGS & PORT_INT6_bm)
-    {
-       BEMF_A_InterruptHandler(); 
-    }
     if(VPORTD.INTFLAGS & PORT_INT0_bm)
     {
        VBUS_InterruptHandler(); 
@@ -609,14 +556,6 @@ ISR(PORTD_PORT_vect)
     if(VPORTD.INTFLAGS & PORT_INT1_bm)
     {
        POT_InterruptHandler(); 
-    }
-    if(VPORTD.INTFLAGS & PORT_INT2_bm)
-    {
-       BEMF_B_InterruptHandler(); 
-    }
-    if(VPORTD.INTFLAGS & PORT_INT4_bm)
-    {
-       BEMF_C_InterruptHandler(); 
     }
     /* Clear interrupt flags */
     VPORTD.INTFLAGS = 0xff;
@@ -632,6 +571,10 @@ ISR(PORTE_PORT_vect)
     if(VPORTE.INTFLAGS & PORT_INT0_bm)
     {
        CRT_REF_InterruptHandler(); 
+    }
+    if(VPORTE.INTFLAGS & PORT_INT1_bm)
+    {
+       CRT2_InterruptHandler(); 
     }
     /* Clear interrupt flags */
     VPORTE.INTFLAGS = 0xff;

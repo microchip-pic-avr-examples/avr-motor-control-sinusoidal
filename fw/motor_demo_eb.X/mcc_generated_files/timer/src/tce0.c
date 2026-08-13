@@ -95,8 +95,8 @@ void TCE0_Initialize(void)
     TCE0.CTRLB = 0x77;
     // CMP0OV disabled; CMP0POL disabled; CMP1OV disabled; CMP1POL disabled; CMP2OV disabled; CMP2POL disabled; CMP3OV disabled; CMP3POL disabled; 
     TCE0.CTRLC = 0x0;
-    // AMPEN enabled; HREN OFF; SCALE FRACTIONAL; SCALEMODE BOTTOM; 
-    TCE0.CTRLD = 0x1C;
+    // AMPEN disabled; HREN OFF; SCALE NORMAL; SCALEMODE BOTTOM; 
+    TCE0.CTRLD = 0x10;
     // CMD NONE; DIR disabled; LUPD disabled; 
     TCE0.CTRLECLR = 0x0;
     // CMD NONE; DIR UP; LUPD disabled; 
@@ -120,7 +120,7 @@ void TCE0_Initialize(void)
     // Offset Register
     TCE0.OFFSET = 0x0;
     // Period Register
-    TCE0.PER = 0x200;
+    TCE0.PER = 0x1F4;
     // Capture/Compare 0 Register
     TCE0.CMP0 = 0x0;
     // Capture/Compare 1 Register
