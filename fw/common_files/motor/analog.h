@@ -31,10 +31,19 @@ typedef enum
 	ID_VBUS,
 	ID_CRT_A,
     ID_CRT_B,
-    ID_CRT_C,
+    ID_CRT_AVG,        
     ID_REF,
+    ID_TEMP,
     ID_MAX,
 } analog_id_t;
+
+typedef enum
+{
+    NO_CURRENT,
+    CRT_PHASE_A,
+    CRT_PHASE_B,
+    CRT_PHASE_C,
+} phase_currents_t;
 
 typedef struct
 {
@@ -50,11 +59,9 @@ void             Analog_Initialize(void);
 uint16_t         Analog_Max(void);
 uint16_t         Analog_Get(analog_id_t id);
 void             Analog_EmergencyStop_Register(analog_id_t id, analog_fault_handler_t handler, uint16_t threshold, uint8_t event);
-void             Analog_HandlerCrt(void);
-void             Analog_HandlerOthers(bool new_bus_crt_sample);
-void             Analog_HandlerIdle(void);
-bool             Analog_NewCrtSample(void);
-analog_bus_crt_t Analog_BusCurrentGet(void); 
+void             Analog_Handler(bool new_ibus_sample);
+void             Analog_LastMeasuredCurrent(int16_t* value, phase_currents_t* current);
+analog_bus_crt_t Analog_BusCurrentGet(bool state);  
 
 #endif /* ANALOG_H */
 

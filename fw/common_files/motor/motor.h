@@ -35,15 +35,17 @@ typedef enum
     MOTOR_EVENT_OV       = (1 << 3),
     MOTOR_EVENT_UV       = (1 << 4),
     MOTOR_EVENT_OC       = (1 << 5),
+    MOTOR_EVENT_OT       = (1 << 6),
 } motor_status_t;
 
-#define MOTOR_ERROR_FLAGS (MOTOR_EVENT_OC | MOTOR_EVENT_OV | MOTOR_EVENT_FAULT | MOTOR_EVENT_STALL | MOTOR_EVENT_UV)
+#define MOTOR_ERROR_FLAGS (MOTOR_EVENT_OC | MOTOR_EVENT_OV | MOTOR_EVENT_FAULT | MOTOR_EVENT_STALL | MOTOR_EVENT_UV | MOTOR_EVENT_OT)
 
 typedef enum
 {
     MOTOR_NO_FAULT = 0,
     MOTOR_FAULT_OVERCURRENT,
     MOTOR_FAULT_OVERVOLTAGE,
+    MOTOR_FAULT_OVERTEMPERATURE,
 } motor_fault_t;
 
 typedef enum
@@ -63,7 +65,7 @@ void           Motor_Fault(motor_fault_t);
 void           Motor_CommandSet(uint16_t ref);
 uint16_t       Motor_MaxAmpGet(void);
 motor_status_t Motor_StatusGet(void);
-uint16_t       Motor_ErpmGet(void);    
+uint32_t       Motor_ErpmGet(void);
 uint16_t       Motor_AmplitudeGet(void);
 void           Motor_TimeTick(void);  /* this function has to be called once every 1 ms, on interrupt context */
 

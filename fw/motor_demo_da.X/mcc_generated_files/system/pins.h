@@ -247,6 +247,25 @@
 #define POT_EnableInterruptForLowLevelSensing() do { PORTD.PIN1CTRL = (PORTD.PIN1CTRL & ~PORT_ISC_gm) | 0x5 ; } while(0)
 #define PD1_SetInterruptHandler POT_SetInterruptHandler
 
+//get/set TEMP aliases
+#define TEMP_SetHigh() do { PORTD_OUTSET = 0x20; } while(0)
+#define TEMP_SetLow() do { PORTD_OUTCLR = 0x20; } while(0)
+#define TEMP_Toggle() do { PORTD_OUTTGL = 0x20; } while(0)
+#define TEMP_GetValue() (VPORTD.IN & (0x1 << 5))
+#define TEMP_SetDigitalInput() do { PORTD_DIRCLR = 0x20; } while(0)
+#define TEMP_SetDigitalOutput() do { PORTD_DIRSET = 0x20; } while(0)
+#define TEMP_SetPullUp() do { PORTD_PIN5CTRL  |= PORT_PULLUPEN_bm; } while(0)
+#define TEMP_ResetPullUp() do { PORTD_PIN5CTRL  &= ~PORT_PULLUPEN_bm; } while(0)
+#define TEMP_SetInverted() do { PORTD_PIN5CTRL  |= PORT_INVEN_bm; } while(0)
+#define TEMP_ResetInverted() do { PORTD_PIN5CTRL  &= ~PORT_INVEN_bm; } while(0)
+#define TEMP_DisableInterruptOnChange() do { PORTD.PIN5CTRL = (PORTD.PIN5CTRL & ~PORT_ISC_gm) | 0x0 ; } while(0)
+#define TEMP_EnableInterruptForBothEdges() do { PORTD.PIN5CTRL = (PORTD.PIN5CTRL & ~PORT_ISC_gm) | 0x1 ; } while(0)
+#define TEMP_EnableInterruptForRisingEdge() do { PORTD.PIN5CTRL = (PORTD.PIN5CTRL & ~PORT_ISC_gm) | 0x2 ; } while(0)
+#define TEMP_EnableInterruptForFallingEdge() do { PORTD.PIN5CTRL = (PORTD.PIN5CTRL & ~PORT_ISC_gm) | 0x3 ; } while(0)
+#define TEMP_DisableDigitalInputBuffer() do { PORTD.PIN5CTRL = (PORTD.PIN5CTRL & ~PORT_ISC_gm) | 0x4 ; } while(0)
+#define TEMP_EnableInterruptForLowLevelSensing() do { PORTD.PIN5CTRL = (PORTD.PIN5CTRL & ~PORT_ISC_gm) | 0x5 ; } while(0)
+#define PD5_SetInterruptHandler TEMP_SetInterruptHandler
+
 //get/set CRT_REF aliases
 #define CRT_REF_SetHigh() do { PORTE_OUTSET = 0x1; } while(0)
 #define CRT_REF_SetLow() do { PORTE_OUTCLR = 0x1; } while(0)
@@ -713,6 +732,27 @@ void POT_DefaultInterruptHandler(void);
  * @return none
  */
 void POT_SetInterruptHandler(void (* interruptHandler)(void)) ; 
+
+/**
+ * @ingroup  pinsdriver
+ * @brief Default Interrupt Handler for TEMP pin. 
+ *        This is a predefined interrupt handler to be used together with the TEMP_SetInterruptHandler() method.
+ *        This handler is called every time the TEMP ISR is executed. 
+ * @pre PIN_MANAGER_Initialize() has been called at least once
+ * @param none
+ * @return none
+ */
+void TEMP_DefaultInterruptHandler(void);
+
+/**
+ * @ingroup  pinsdriver
+ * @brief Interrupt Handler Setter for TEMP pin input-sense-config functionality.
+ *        Allows selecting an interrupt handler for TEMP at application runtime
+ * @pre PIN_MANAGER_Initialize() has been called at least once
+ * @param InterruptHandler function pointer.
+ * @return none
+ */
+void TEMP_SetInterruptHandler(void (* interruptHandler)(void)) ; 
 
 /**
  * @ingroup  pinsdriver

@@ -68,6 +68,7 @@ extern void TCE_TCB_sync_start(void);
 #define CRT_N_ADC_PIN                       ADC_MUXPOS_AIN7_gc  // PD7
 #define VBUS_ADC_PIN                        ADC_MUXPOS_AIN20_gc // PF4
 #define POT_ADC_PIN                         ADC_MUXPOS_AIN1_gc  // PD1
+#define TEMP_ADC_PIN               			ADC_MUXPOS_AIN28_gc // PC0
 
 /* ADC APIs */
 #define ADC_MUX_SET                         ADC0_ChannelSelect
@@ -94,6 +95,11 @@ static void System_Reset_Command(void)      { _PROTECTED_WRITE(RSTCTRL.SWRR, RST
 #define HALL_B_PIN                          PIN2CTRL
 #define HALL_C_PIN                          PIN3CTRL
 #define HALL_READ                           ((PORTF.IN & (PIN1_bm | PIN2_bm | PIN3_bm)) >> 1)                          
+#define HALL_INVERT()                       do{\
+                                            HALL_PORT.HALL_A_PIN = PORT_INVEN_bm;\
+                                            HALL_PORT.HALL_B_PIN = PORT_INVEN_bm;\
+                                            HALL_PORT.HALL_C_PIN = PORT_INVEN_bm;\
+                                            }while(0)
 
 
 #endif /* MCC_MAPPING_H */

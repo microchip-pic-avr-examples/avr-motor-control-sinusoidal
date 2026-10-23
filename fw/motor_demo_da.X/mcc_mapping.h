@@ -76,6 +76,7 @@ extern void TCA_sync_start(void);
 #define CRT_N_ADC_PIN                       ADC_MUXPOS_AIN8_gc  // PE0
 #define VBUS_ADC_PIN                        ADC_MUXPOS_AIN0_gc  // PD0
 #define POT_ADC_PIN                         ADC_MUXPOS_AIN1_gc  // PD1
+#define TEMP_ADC_PIN               			ADC_MUXPOS_AIN5_gc  // PD5
 
 /* ADC APIs */
 #define ADC_MUX_SET                         ADC0_ChannelSelect
@@ -101,6 +102,11 @@ extern void TCA_sync_start(void);
 #define HALL_B_PIN                          PIN3CTRL
 #define HALL_C_PIN                          PIN4CTRL
 #define HALL_READ                           ((PORTF.IN & (PIN2_bm | PIN3_bm | PIN4_bm)) >> 2)                          
+#define HALL_INVERT()                       do{\
+                                            HALL_PORT.HALL_A_PIN = PORT_INVEN_bm;\
+                                            HALL_PORT.HALL_B_PIN = PORT_INVEN_bm;\
+                                            HALL_PORT.HALL_C_PIN = PORT_INVEN_bm;\
+                                            }while(0)
 
 
 #endif /* MCC_MAPPING_H */

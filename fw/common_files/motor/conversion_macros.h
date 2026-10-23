@@ -34,7 +34,6 @@
 #define CURRENT_AMPLIFIER_OFFSET          (ANALOG_REFERENCE / 2)
 #define PWM_FREQUENCY                     (F_CPU / (2.0 * (float)PWM_PER)) // Hz - 50us
 #define SAMPLING_FREQUENCY                (PWM_FREQUENCY / 2.0)            // Hz - PWM_FREQUENCY divide by 2
-#define SQRT3                             1.7320508075688772935
 
 /* potentiometer conversion formulas to/from percents */
 #define ADC_TO_PERCENT(X)                 (((float)(X) + 0.5) * 100.0 / (ADC_MAX_SCALE + 1))
@@ -44,10 +43,14 @@
 #define ADC_TO_VOLTAGE(X)                 (((float)(X) + 0.5) * VBUS_DIVIDER * ANALOG_REFERENCE / (ADC_MAX_SCALE + 1))
 #define VOLTAGE_TO_ADC(X)                 (uint16_t)((float)(X) * (ADC_MAX_SCALE + 1) / (VBUS_DIVIDER * ANALOG_REFERENCE) + 0.5)
 
+/* temperature to Celsius degrees conversion formulas */
+#define ADC_TO_CELSIUS(X)                 ((float)((X) * (ANALOG_REFERENCE / (ADC_MAX_SCALE + 1)) - TEMP_SENSOR_K1) / TEMP_SENSOR_K2)
+#define CELSIUS_TO_ADC(X)                 (uint16_t)(((float)(X) * TEMP_SENSOR_K2 + TEMP_SENSOR_K1) * (ADC_MAX_SCALE + 1) / ANALOG_REFERENCE + 0.5)
+
 /* current conversion formulas to/from milliamperes */
 #define ADC_TO_CURRENT(ADC, N)            ((((float)((ADC) / (N)) + 0.5) * ANALOG_REFERENCE / (ADC_MAX_SCALE + 1)) / (CURRENT_AMPLIFIER_GAIN * CURRENT_SHUNT_RESISTANCE))
 #define CURRENT_TO_ADC(MA)                (uint16_t)( ((float)(MA) * CURRENT_AMPLIFIER_GAIN * CURRENT_SHUNT_RESISTANCE) * (ADC_MAX_SCALE + 1) / ANALOG_REFERENCE + 0.5)
-#define CURRENT_CONSTANT                  (M_PI / (4.0 * SQRT3))
+#define CURRENT_CONSTANT                  (M_PI / (2.0 * M_SQRT2))
 
 /* current conversion formulas to/from milliamperes - reference DAC */
 #define ACREF_TO_CURRENT(X)               ( ((float)(X) * ANALOG_REFERENCE / DAC_MAX_SCALE - CURRENT_AMPLIFIER_OFFSET) / (CURRENT_AMPLIFIER_GAIN * CURRENT_SHUNT_RESISTANCE) )
@@ -186,7 +189,6 @@ typedef uint16_t fixp16_t;  /* U1Q15 0...32768 / 0.0...1.0000 */
 
 #define FLOAT_TO_FIXP16(FLOAT)             (fixp16_t)((FLOAT)*32768.0 + 0.5)
 #define FIXP16_TO_FLOAT(FIXP)              ((float)(FIXP)/32768.0)
-
 
 #define MAXIMUM(A,B)                       (((A)>(B))?(A):(B))
 #define MINIMUM(A,B)                       (((A)<(B))?(A):(B))

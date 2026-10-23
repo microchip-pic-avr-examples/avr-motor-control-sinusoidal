@@ -32,11 +32,11 @@ Field Oriented Control (FOC) is not used in this application, due to a lack of c
 - [Programming the AVR® MCU](#programming-the-avr-mcu)
   - [Programming Using MPLAB® X IDE](#programming-using-mplab-x-ide)
   - [Programming Using VS Code®](#programming-using-vs-code)
+- [Console Interface](#console-interface)
+- [PWM Input Interface](#pwm-input-interface)
 - [Application Usage](#application-usage)
   - [Let's Spin the Motor](#lets-spin-the-motor)
   - [Tunning Guide](#tunning-guide)
-  - [Console Interface](#console-interface)
-  - [PWM Input Interface](#pwm-input-interface)
 - [Software Description](#software-description)
   - [Software Organization in Folders and Files](#software-organization-in-folders-and-files)
   - [MCC Maping](#mcc-maping)
@@ -59,7 +59,13 @@ Field Oriented Control (FOC) is not used in this application, due to a lack of c
 
 ## Release Notes
 
-Current Version 2.0.0 features:
+Current Version 2.1.0 features:
+
+- Improved the stability of the sychronization algorithm
+- Reduced the Interrupt Service Routine (ISR) execution time
+- Refactored the analog signals measurement logic, fixed current consumption of the motor measurement
+
+Version 2.0.0 features:
 
 - Support for the sensorless sinusoidal control (not FOC) using BEMF reconstruction
 - Configurable speed ramp at start-up with the following parameters: start-speed, end-speed and speed-step
@@ -166,6 +172,7 @@ If the MPPB and the adapter boards are not used, the user can integrate the AVR 
 |Potentiometer                  |Pin 32 - PD1                    |Pin 47 - PD1                     |Pin 29                         |
 |LED                            |Pin 21 - PF5                    |Pin 27 - PC6                     |Pin 33                         |
 |Switch                         |Pin 20 - PF6                    |Pin 28 - PC7                     |Pin 35                         |
+|Temperature Sensor             |Pin 19 - PC0                    |Pin 45 - PD5                     |Pin 31                         |
 |PWM IN                         |Pin 23 - PF0                    |Pin 37 - PA3                     |Pin 18                         |
 |TXC                            |Pin 16 - PC1                    |Pin 25 - PC0                     | -                             |
 |RXC                            |Pin 17 - PC2                    |Pin 26 - PC1                     | -                             |
@@ -213,26 +220,30 @@ If the MPPB and the adapter boards are not used, the user can integrate the AVR 
 #define VBUS_DIVIDER                    (16.0)
 #define ANALOG_REFERENCE                (3300.0)     /* mV */
 #define ADC_VBUS_TRIP                   (51000.0)    /* mV - VBUS trip level */
+#define ADC_TEMP_TRIP                   (100.0)      /* *C - ADC temperature trip level */
 #define ADC_CURRENT_TRIP                (15000.0)    /* mA - ADC current trip level */
 #define COMPARATOR_CURRENT_TRIP         (22000.0)    /* mA - Comparator trip level - not used on external-comparator configurations */
 #define FAULT_COMPARATOR_EN             true
 #define BOARD_MOSFET_RDSON              (0.004)      /* ohm - MOSFETs Rds-on resistance */
+#define TEMP_SENSOR_K1                  (400.0)      /* mV - output voltage at 0 *C  */
+#define TEMP_SENSOR_K2                  (19.53)      /* mV / *C   */
 
 /* Motor-specific settings */
 /* ACT57BLF02:  supply 24V, 3A limit */
-#define MOTOR_PHASE_ADVANCE             (12.0)       /* Phase advance 0.0 ... 30.0 electrical degrees */
-#define MOTOR_STARTUP_CURRENT           (13000.0)    /* mA - Initial alignment current pulse may be higher than overcurrent protection */
+#define MOTOR_PHASE_ADVANCE             (5.0)        /* Phase advance 0.0 ... 30.0 electrical degrees */
+#define MOTOR_STARTUP_CURRENT           (15000.0)    /* mA - Initial alignment current pulse may be higher than overcurrent protection */
 #define MOTOR_RPP                       (0.45)       /* ohm - Motor resistance measured phase-to-phase */
 #define MOTOR_LPP                       (0.3)        /* mH - Motor inductance measured phase-to-phase */
-#define MOTOR_ALIGNMENT_DURATION        (100)        /* ms */
-#define MOTOR_AMPRAMP_STEP_INTERVAL     (3)          /* Amplitude ramp step interval: expressed in milliseconds, representing the time passed between two amplitude steps - 1 for aggresive ramp, 10 for soft ramp */    
+#define MOTOR_AMPRAMP_STEP_INTERVAL     (3)          /* Amplitude ramp step interval: expressed in milliseconds, representing the time passed between two amplitude steps - 1 for aggresive ramp, 10 for soft ramp */
+#define MOTOR_ALIGNMENT_DURATION        (100)        /* ms */       
 #define MOTOR_STARTUP_TIME              (100)        /* ms - Delay until commands (POT or PWM-in) are accepted; a value of '-1' causes commands to be ignored */
-#define MOTOR_RAMP_START_SPEED          (500.0)      /* e-RPM - Specifies the initial speed - minimum value is 100 e-RPM*/
-#define MOTOR_RAMP_END_SPEED            (3600.0)     /* e-RPM */
-#define MOTOR_RAMP_STEP_SPEED           (3)          /* e-RPM */
+#define MOTOR_RAMP_START_SPEED          (1000.0)     /* e-RPM - Specifies the initial speed - minimum value is 100 e-RPM*/
+#define MOTOR_RAMP_END_SPEED            (4000.0)     /* e-RPM */
+#define MOTOR_RAMP_STEP_SPEED           (5)          /* e-RPM */
 #define HALL_ENABLED                    false        /* Setting to 'true' enables the Hall synchronization, while setting to 'false' enables the BEMF synchronization */
-#define HALL_MISALIGNMENT_CW            (8.0)        /* Hall misalignment 0.0 ... 90.0 electrical degrees */
-#define HALL_MISALIGNMENT_CCW           (10.0)       /* Hall misalignment 0.0 ... 90.0 electrical degrees */
+#define HALL_MISALIGNMENT_CW            (8.0)        /* Hall misalignment -60.0 ... 60.0 electrical degrees */
+#define HALL_MISALIGNMENT_CCW           (10.0)       /* Hall misalignment -60.0 ... 60.0 electrical degrees */
+#define HALL_INVERTED                   false        /* Sets the Hall pins polarity - 'true' for sensors active in '0' and 'false' for sensors active in '1' */ 
 
 /* Speed regulation specific settings */
 #define REGULATOR_SPEED_EN              true         /* Setting to 'true' enables speed control in Closed Loop, while setting to 'false' enables amplitude control in Open Loop */
@@ -314,6 +325,19 @@ This chapter demonstrates how to use the VS Code to program an AVR device with a
 <br>1. When opening one of the two `motor_demo_eb` or `motor_demo_da` code examples in VS Code, a pop-up window will show up asking to include the external `common_files` folder to the opened project. When the pop-window appears on the screen, click the **Yes** button, otherwise the project will not build and compile.
 <br>2. When trying to program the board, another pop-up window might show up saying the build for that project is not found. If the window appears, click the **Debug Anyway** button.
 
+## Console Interface
+
+<br>The application has a console communication interface. To activate it, open a PC software terminal and select the UART protocol, 8N1, with a baud rate of 57600 bps.
+<br> The serial interface provides information about the remote controller PWM input, potentiometer value, PWM amplitude, electrical rotations per minute (RPM) value, voltage bus value, temperature value, motor current consumption value and motor running state (ON/OFF).
+
+<br><img src="images/console.png">
+
+## PWM Input Interface
+<br>The MPPB hardware and the software application support interfacing with a PWM Remote Controller (PWM-RC).
+<br>The application measures the signals from the PWM-RC and on-board potentiometer, but the PWM-RC has priority over the potentiometer in controlling the motor.
+<br>If the PWM-RC/PWM-IN signal is not detected, then the on-board potentiometer is used for control.
+<br><img src="images/pwm_in.png">
+
 ## Application Usage
 
 ### Let's Spin the Motor
@@ -333,26 +357,13 @@ If the motor is not yet spining after following all the steps in the [Quick Star
 7. If the motor is still not spinning well, or it consumes a lot of current and not spinning at the rated speed for the rated voltage, then the `MOTOR_PHASE_ADVANCE` must be adjusted. To achieve a good current consumption and satisfying rotational speed, set `MOTOR_PHASE_ADVANCE` to 0 degrees, then increase with one degree and run again until the optimal value is found.
 8. After getting the motor to spin in open loop, set the`REGULATOR_SPEED_EN` parameter back to 'true' to switch to closed-loop speed control.
 9. For stability, ensure that `REGULATOR_MIN_SPEED` is high enough to run the motor stable (~10%–15% of nominal speed) and that `REGULATOR_MAX_SPEED` does not exceed the maximum rated speed at the supplied voltage.
-10. For sensored control, set the `HALL_ENABLED` parameter to 'true'; start with `HALL_MISALIGNMENT_CW` and `HALL_MISALIGNMENT_CCW` configured to a initial value of 0 electrical degrees. If the motor spins eratically, consumes a lot of current or enters a Stall condition, try to increase `HALL_MISALIGNMENT_CW` and `HALL_MISALIGNMENT_CCW` with five electrical degrees at a time and run again. The values of Hall misalignment for the CW and CCW spinning direction might not be the same. If the motor has Hall sensors with inverted polarity, the misalignment values will be bigger — between 0 and 90 electrical degrees. Compare the achieved speed and current consumption with the ones rated for the supplied voltage or with the ones from sensorless control with BEMF reconstruction. If the results are the same, the motor is tuned to use Hall sensors.
-
-### Console Interface
-
-<br>The application has a console communication interface. To activate it, open a PC software terminal and select the UART protocol, 8N1, with a baud rate of 57600 bps.
-<br> The serial interface provides information about the remote controller PWM input, potentiometer value, voltage bus value, motor current value, electrical rotations per minute (RPM) value and motor running state (ON/OFF).
-
-<br><img src="images/console.png">
-
-### PWM Input Interface
-<br>The MPPB hardware and the software application support interfacing with a PWM Remote Controller (PWM-RC).
-<br>The application measures the signals from the PWM-RC and on-board potentiometer, but the PWM-RC has priority over the potentiometer in controlling the motor.
-<br>If the PWM-RC/PWM-IN signal is not detected, then the on-board potentiometer is used for control.
-<br><img src="images/pwm_in.png">
+10. For sensored control, set the `HALL_ENABLED` parameter to 'true'; start with `HALL_MISALIGNMENT_CW` and `HALL_MISALIGNMENT_CCW` configured to a initial value of 0 electrical degrees and set `HALL_INVERTED` to `false`. If the motor spins eratically, consumes a lot of current or enters a Stall condition, try to increase or decrease `HALL_MISALIGNMENT_CW` and `HALL_MISALIGNMENT_CCW` with one electrical degree at a time and run again. The range for `HALL_MISALIGNMENT_CW` and `HALL_MISALIGNMENT_CCW` is between -60 abd +60 electrical degrees, though usually the values are not larger than a few electrical degrees. The values of Hall misalignment for the CW and CCW spinning direction might not be the same. If the motor is still not spinning, try setting the `HALL_INVERTED` parameter to `true` and repeat the procedure. Compare the achieved speed and current consumption with the ones rated for the supplied voltage or with the ones from sensorless control with BEMF reconstruction. If the results are the same, the motor is tuned to use Hall sensors.
 
 ## Software Description
 
 ### Software Organization in Folders and Files
 
-All the files shared by the three platforms are in the `common_files` folder. Each platform has its own `main.c` and `mcc_mapping.h` files.
+All the files shared by the two platforms are in the `common_files` folder. Each platform has its own `main.c` and `mcc_mapping.h` files.
 ```
    fw
     ├───common_files
@@ -458,10 +469,13 @@ The parameters from the `config.h` file used to customize the application are th
 <br>• <b>`VBUS_DIVIDER`</b> - The voltage divider, used to scale the V<sub>BUS</sub> to be able to measure it with the `ANALOG_REFERENCE` logic, dependent on the power board
 <br>• <b>`ANALOG_REFERENCE`</b> - The voltage reference (this application has a 3V3 logic)
 <br>• <b>`ADC_VBUS_TRIP`</b> - Sets the Analog-to-Digital Converter (ADC) trip level in case of an overvoltage protection, expressed in millivolts
+<br>• <b>`ADC_TEMP_TRIP`</b> - Sets the ADC trip level in case of an overtemperature protection, expressed in degrees Celsius
 <br>• <b>`ADC_CURRENT_TRIP`</b> - Sets the ADC trip level in case of an average overcurrent protection, expressed in milliamperes
 <br>• <b>`COMPARATOR_CURRENT_TRIP`</b> - Sets the internal comparator's trip level in case of a peak overcurrent protection on the first current shunt resistor
 <br>• <b>`FAULT_COMPARATOR_EN`</b> - Enables or disables the comparator used for current trip. For AVR16EB32 and AVR128DA48, this mechanism is implemented using an internal comparator.
 <br>• <b>`BOARD_MOSFET_RDSON`</b> - The drain-source on-resistance value of the transistors present on the power board. This value is acquired from the data sheet of the transistor.
+<br>• <b>`TEMP_SENSOR_K1`</b> - Temperature sensor constant for sensor MCP9701. for more information check [`MCP9701`](https://www.microchip.com/en-us/product/mcp9701)
+<br>• <b>`TEMP_SENSOR_K2`</b> - Temperature sensor constant for sensor MCP9701. for more information check [`MCP9701`](https://www.microchip.com/en-us/product/mcp9701)
 
 <br><b> Motor Settings </b>
 
@@ -476,8 +490,9 @@ The parameters from the `config.h` file used to customize the application are th
 <br>• <b>`MOTOR_RAMP_END_SPEED`</b> - Sets the speed at the end of the start-up ramp. The minimum value must be higher than the `MOTOR_STARTUP_SPEED`.
 <br>• <b>`MOTOR_RAMP_STEP_SPEED`</b> - Sets the speed increment size during the start-up ramp. The higher the number, the more aggressive the ramp; however, the motor might enter a stall condition if the ramp is too abrupt.
 <br>• <b>`HALL_ENABLED`</b> - Enables or disables the sensored control with Halls. If the sensored control is disabled, the sensorless control with BEMF is enabled and vice-versa. The application does not support both sensored and sensorless control at the same time.
-<br>• <b>`HALL_MISALIGNMENT_CW`</b> - This parameter is used to compensate the errors resulting when spinning in the CW direction, as the sensors transitions are imperfect due to mechanical placing. Its values can range between 0 and 90 electrical degrees.
-<br>• <b>`HALL_MISALIGNMENT_CCW`</b> - This parameter is used to compensate the errors resulting when spinning in the CCW direction, as the sensors transitions are imperfect due to mechanical placing. Its values can range between 0 and 90 electrical degrees.
+<br>• <b>`HALL_MISALIGNMENT_CW`</b> - This parameter is used to compensate the errors resulting when spinning in the CW direction, as the sensors transitions are imperfect due to mechanical placing. Its values can range between -60 and 60 electrical degrees.
+<br>• <b>`HALL_MISALIGNMENT_CCW`</b> - This parameter is used to compensate the errors resulting when spinning in the CCW direction, as the sensors transitions are imperfect due to mechanical placing. Its values can range between -60 and 60 electrical degrees.
+<br>• <b>`HALL_INVERTED`</b> - Used to invert hall pins polarity, if needed. Some hall sensors are active in `1` logic, while others are active in `0` logic.
 
 <br><b> Speed Regulator Settings </b>
 
@@ -730,10 +745,10 @@ Oscilloscope traces:
 
 | Motor                 | Brief Specifications            | Supply Voltage [V] | Current Consumption [A] | e-RPM                    | Type    |
 |:---------------------:|:-------------------------------:|:------------------:|:-----------------------:|:------------------------:|:-------:|
-|ACT42BLF01             | 24 V / 1.9 A / 4 pp* / 4 kRPM   |    24              |      0.13  (no load)    |       10,000             | 3-phase |
+|ACT42BLF01             | 24 V / 1.9 A / 4 pp* / 4 kRPM   |    24              |      0.15  (no load)    |       12,000             | 3-phase |
 |ACT57BLF02             | 24 V / 7.8 A / 4 pp / 3 kRPM    |    24              |      0.38  (no load)    |       10,000             | 3-phase |
-|Hurst DMA0002024C1010  | 24 V / 4 A / 5 pp / 3 kRPM      |    24              |      0.1   (no load)    |        8,000             | 3-phase |
-|Hurst DMA0204024B101   | 24 V / 7 A / 5 pp / 3 kRPM      |    24              |      0.4   (no load)    |        8,000             | 3-phase |
+|Hurst DMA0002024C1010  | 24 V / 4 A / 5 pp / 3 kRPM      |    24              |      0.1   (no load)    |       12,000             | 3-phase |
+|Hurst DMA0204024B101   | 24 V / 7 A / 5 pp / 3 kRPM      |    24              |      0.2   (no load)    |       10,000             | 3-phase |
 
 **Note:** *pp — stands for pole pairs
 

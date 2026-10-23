@@ -45,6 +45,7 @@ static void (*RXD_InterruptHandler)(void);
 static void (*TXD_InterruptHandler)(void);
 static void (*VBUS_InterruptHandler)(void);
 static void (*POT_InterruptHandler)(void);
+static void (*TEMP_InterruptHandler)(void);
 static void (*CRT_REF_InterruptHandler)(void);
 static void (*CRT2_InterruptHandler)(void);
 static void (*PWM_IN_InterruptHandler)(void);
@@ -107,10 +108,10 @@ void PIN_MANAGER_Initialize()
     PORTD.PIN2CTRL = 0x0;
     PORTD.PIN3CTRL = 0x0;
     PORTD.PIN4CTRL = 0x0;
-    PORTD.PIN5CTRL = 0x0;
+    PORTD.PIN5CTRL = 0x4;
     PORTD.PIN6CTRL = 0x0;
     PORTD.PIN7CTRL = 0x0;
-    PORTE.PIN0CTRL = 0x0;
+    PORTE.PIN0CTRL = 0x4;
     PORTE.PIN1CTRL = 0x4;
     PORTE.PIN2CTRL = 0x4;
     PORTE.PIN3CTRL = 0x0;
@@ -152,6 +153,7 @@ void PIN_MANAGER_Initialize()
     TXD_SetInterruptHandler(TXD_DefaultInterruptHandler);
     VBUS_SetInterruptHandler(VBUS_DefaultInterruptHandler);
     POT_SetInterruptHandler(POT_DefaultInterruptHandler);
+    TEMP_SetInterruptHandler(TEMP_DefaultInterruptHandler);
     CRT_REF_SetInterruptHandler(CRT_REF_DefaultInterruptHandler);
     CRT2_SetInterruptHandler(CRT2_DefaultInterruptHandler);
     PWM_IN_SetInterruptHandler(PWM_IN_DefaultInterruptHandler);
@@ -308,6 +310,19 @@ void POT_DefaultInterruptHandler(void)
 {
     // add your POT interrupt custom code
     // or set custom function using POT_SetInterruptHandler()
+}
+/**
+  Allows selecting an interrupt handler for TEMP at application runtime
+*/
+void TEMP_SetInterruptHandler(void (* interruptHandler)(void)) 
+{
+    TEMP_InterruptHandler = interruptHandler;
+}
+
+void TEMP_DefaultInterruptHandler(void)
+{
+    // add your TEMP interrupt custom code
+    // or set custom function using TEMP_SetInterruptHandler()
 }
 /**
   Allows selecting an interrupt handler for CRT_REF at application runtime
@@ -556,6 +571,10 @@ ISR(PORTD_PORT_vect)
     if(VPORTD.INTFLAGS & PORT_INT1_bm)
     {
        POT_InterruptHandler(); 
+    }
+    if(VPORTD.INTFLAGS & PORT_INT5_bm)
+    {
+       TEMP_InterruptHandler(); 
     }
     /* Clear interrupt flags */
     VPORTD.INTFLAGS = 0xff;

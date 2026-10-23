@@ -33,26 +33,30 @@
 #define VBUS_DIVIDER                    (16.0)
 #define ANALOG_REFERENCE                (3300.0)     /* mV */
 #define ADC_VBUS_TRIP                   (51000.0)    /* mV - VBUS trip level */
+#define ADC_TEMP_TRIP                   (100.0)      /* *C - ADC temperature trip level */
 #define ADC_CURRENT_TRIP                (15000.0)    /* mA - ADC current trip level */
 #define COMPARATOR_CURRENT_TRIP         (22000.0)    /* mA - Comparator trip level - not used on external-comparator configurations */
 #define FAULT_COMPARATOR_EN             true
 #define BOARD_MOSFET_RDSON              (0.004)      /* ohm - MOSFETs Rds-on resistance */
+#define TEMP_SENSOR_K1                  (400.0)      /* mV - output voltage at 0 *C  */
+#define TEMP_SENSOR_K2                  (19.53)      /* mV / *C   */
 
 /* Motor-specific settings */
 /* ACT57BLF02:  supply 24V, 3A limit */
-#define MOTOR_PHASE_ADVANCE             (12.0)       /* Phase advance 0.0 ... 30.0 electrical degrees */
-#define MOTOR_STARTUP_CURRENT           (13000.0)    /* mA - Initial alignment current pulse may be higher than overcurrent protection */
+#define MOTOR_PHASE_ADVANCE             (5.0)        /* Phase advance 0.0 ... 30.0 electrical degrees */
+#define MOTOR_STARTUP_CURRENT           (15000.0)    /* mA - Initial alignment current pulse may be higher than overcurrent protection */
 #define MOTOR_RPP                       (0.45)       /* ohm - Motor resistance measured phase-to-phase */
 #define MOTOR_LPP                       (0.3)        /* mH - Motor inductance measured phase-to-phase */
-#define MOTOR_ALIGNMENT_DURATION        (100)        /* ms */
-#define MOTOR_AMPRAMP_STEP_INTERVAL     (3)          /* Amplitude ramp step interval: expressed in milliseconds, representing the time passed between two amplitude steps - 1 for aggresive ramp, 10 for soft ramp */       
+#define MOTOR_AMPRAMP_STEP_INTERVAL     (3)          /* Amplitude ramp step interval: expressed in milliseconds, representing the time passed between two amplitude steps - 1 for aggresive ramp, 10 for soft ramp */
+#define MOTOR_ALIGNMENT_DURATION        (100)        /* ms */       
 #define MOTOR_STARTUP_TIME              (100)        /* ms - Delay until commands (POT or PWM-in) are accepted; a value of '-1' causes commands to be ignored */
-#define MOTOR_RAMP_START_SPEED          (500.0)      /* e-RPM - Specifies the initial speed - minimum value is 100 e-RPM*/
-#define MOTOR_RAMP_END_SPEED            (3600.0)     /* e-RPM */
-#define MOTOR_RAMP_STEP_SPEED           (3)          /* e-RPM */
+#define MOTOR_RAMP_START_SPEED          (1000.0)     /* e-RPM - Specifies the initial speed - minimum value is 100 e-RPM*/
+#define MOTOR_RAMP_END_SPEED            (4000.0)     /* e-RPM */
+#define MOTOR_RAMP_STEP_SPEED           (5)          /* e-RPM */
 #define HALL_ENABLED                    false        /* Setting to 'true' enables the Hall synchronization, while setting to 'false' enables the BEMF synchronization */
-#define HALL_MISALIGNMENT_CW            (8.0)        /* Hall misalignment 0.0 ... 90.0 electrical degrees */
-#define HALL_MISALIGNMENT_CCW           (10.0)       /* Hall misalignment 0.0 ... 90.0 electrical degrees */
+#define HALL_MISALIGNMENT_CW            (8.0)        /* Hall misalignment -60.0 ... 60.0 electrical degrees */
+#define HALL_MISALIGNMENT_CCW           (10.0)       /* Hall misalignment -60.0 ... 60.0 electrical degrees */
+#define HALL_INVERTED                   false        /* Sets the Hall pins polarity - 'true' for sensors active in '0' and 'false' for sensors active in '1' */ 
 
 /* Speed regulation specific settings */
 #define REGULATOR_SPEED_EN              true         /* Setting to 'true' enables speed control in Closed Loop, while setting to 'false' enables amplitude control in Open Loop */
